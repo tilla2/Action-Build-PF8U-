@@ -87,6 +87,7 @@ jobs:
         run: |
           set -e
           echo "Precision mode - Delete by run number: $TARGET_RUN_NUMBERS"
+          
           IFS=',' read -ra NUM_LIST <<< "$TARGET_RUN_NUMBERS"
           for RAW_NUM in "${NUM_LIST[@]}"; do
             NUM=$(echo "$RAW_NUM" | tr -d ' #')
@@ -126,6 +127,7 @@ jobs:
         run: |
           set -e
           echo "Precision mode - Delete by Run ID: $TARGET_RUN_IDS"
+          
           IFS=',' read -ra ID_LIST <<< "$TARGET_RUN_IDS"
           for RAW_ID in "${ID_LIST[@]}"; do
             RID=$(echo "$RAW_ID" | tr -d ' ')
@@ -210,6 +212,7 @@ jobs:
             
             [ "$TOTAL_DELETED" -ge "$COUNT" ] && break
             echo "Batch mode - Processing conclusion type: $CONCLUSION (Global remaining quota: $((COUNT - TOTAL_DELETED)) runs)..."
+            
             while IFS=' ' read -r RUN_ID _STARTED; do
               [ -z "$RUN_ID" ] && continue
               [[ "$RUN_ID" == "$CURRENT_RUN_ID" ]] && continue
@@ -230,6 +233,7 @@ jobs:
           done
           
           echo "✅ Batch deletion completed, total deleted $TOTAL_DELETED runs (Limit: $COUNT)."
+          
   cleanup-caches:
     runs-on: ubuntu-latest
     if: ${{ inputs.cache_mode != 'none' }}
