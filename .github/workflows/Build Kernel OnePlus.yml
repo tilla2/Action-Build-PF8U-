@@ -177,6 +177,7 @@ on:
         description: "Disable caching for this build?"
         required: true
         default: false
+        
 jobs:
   build:
     name: ${{ github.event.inputs.FAST_BUILD == 'true' && ' [FAST]' || '' }}${{ contains(github.event.inputs.FILE, '_aosp') && ' [AOSP]' || '' }}${{ github.event.inputs.KPM == 'KPM' && ' [KPM]' || github.event.inputs.KPM == 'KPN' && ' [KPN]' || '' }}${{ github.event.inputs.LSM_BBG == 'true' && ' [BBG]' || '' }}${{ github.event.inputs.SCHED_HMBIRD == 'true' && ' [HMBIRD]' || '' }}${{ github.event.inputs.DROID_SPACES == 'true' && ' [DS]' || '' }}${{ startsWith(github.event.inputs.ZRAM, '1/') && ' [ZRAM]' || '' }}${{ github.event.inputs.RE_KERNEL == 'true' && ' [REKER]' || '' }}${{ github.event.inputs.LZ4_UPDATE == 'true' && ' [LZ4UPD]' || '' }}For ${{ github.event.inputs.FILE }} ${{ github.event.inputs.SUFFIX }}
@@ -228,20 +229,25 @@ jobs:
           echo "Processing FILE=$FILE, CONF=$FILE_CONF, BASE=$FILE_BASE"
           echo "FILE_CONF=$FILE_CONF" >> $GITHUB_ENV
           echo "FILE_BASE=$FILE_BASE" >> $GITHUB_ENV
+          
           # Dynamically call source manifest repository, priority: 1️⃣ OnePlusOSS → 2️⃣ Dynamic → 3️⃣ Appendix
           DYNAMIC_REPO_INPUT="${{ github.event.inputs.DYNAMIC_REPO }}"
           declare -A REPOS
           REPOS["OnePlusOSS"]="OnePlusOSS|kernel_manifest"
           REPOS["Dynamic"]="${DYNAMIC_REPO_INPUT}|kernel_manifest"
           REPOS["Appendix"]="Numbersf|Kernel_Manifest_Appendix"
+          
           FOUND_REPO=""
           FOUND_BRANCH=""
+          
           check_repo() {
             local ENTRY=$1
             local OWNER=${ENTRY%%|*}
             local REPO_NAME=${ENTRY##*|}
+            
             echo "🌐 Attempting to fetch branch list for ${OWNER}/${REPO_NAME}..."
             BRANCHES=$(git ls-remote --heads https://github.com/${OWNER}/${REPO_NAME}.git | sed 's|.*refs/heads/||')
+            
             if [[ -z "$BRANCHES" ]]; then
               echo "⚠️ Failed to fetch branch list for ${OWNER}/${REPO_NAME}, please try running the workflow again."
               return 1
@@ -249,13 +255,16 @@ jobs:
             for BRANCH in $BRANCHES; do
               XML_URL="https://raw.githubusercontent.com/${OWNER}/${REPO_NAME}/${BRANCH}/${FILE}.xml"
               README_URL="https://raw.githubusercontent.com/${OWNER}/${REPO_NAME}/${BRANCH}/README.md"
+              
               if curl -sf --head "$XML_URL" >/dev/null; then
                 echo "✅ Found ${FILE}.xml in ${OWNER}/${REPO_NAME} (branch: ${BRANCH})"
                 curl -s -o "$XML_PATH" "$XML_URL"
                 curl -s -o "$README_PATH" "$README_URL" || true
+                
                 FOUND_REPO="$OWNER"
                 FOUND_REPO_NAME="$REPO_NAME"
                 FOUND_BRANCH="$BRANCH"
+                
                 return 0
               fi
             done
@@ -273,6 +282,7 @@ jobs:
           echo "MANIFEST_REPO=$FOUND_REPO" >> "$GITHUB_ENV"
           echo "MANIFEST_REPO_NAME=$FOUND_REPO_NAME" >> "$GITHUB_ENV"
           echo "MANIFEST_BRANCH=$FOUND_BRANCH" >> "$GITHUB_ENV"
+          
           # Parse revision string
           REVISION=$(grep -oP '<project[^>]+revision="\K[^"]+' "$XML_PATH" | head -n1 || true)
           echo "Parsing FILE to get CPU and ANDROID_VERSION..."
@@ -290,6 +300,7 @@ jobs:
             echo "❌ Could not extract CPU or ANDROID_VERSION from revision"
             exit 1
           fi
+          
           echo "Parsing README.md to get CPUD and BUILD_METHOD..."
           if [[ -s "$README_PATH" ]]; then
             BUILD_LINE=$(grep -m1 'oplus_build_kernel.sh' "$README_PATH" || true)
@@ -305,6 +316,7 @@ jobs:
           else
             echo "❌ README.md download failed or is empty"
           fi
+          
           # Pass combined information
           echo "value=${FILE_BASE}_Android${ANDROID_VERSION}" >> "$GITHUB_OUTPUT"
 
@@ -314,6 +326,7 @@ jobs:
           SUFFIX: ${{ github.event.inputs.SUFFIX }}
         run: |
           echo "------------------------------"
+          
           echo "Selected CPU: ${{ env.CPU }}"
           echo "Selected CPUD: ${{ env.CPUD }}"
           echo "Selected ANDROID_VERSION: ${{ env.ANDROID_VERSION }}"
@@ -457,6 +470,7 @@ jobs:
           else
             echo "❎ build.config.msm.common not found, it might be a Dimensity manifest or pure Kleaf build structure"
           fi
+          
           # Remove ABI protection
           for dir in kernel_platform/common kernel_platform/$KERNEL_REPOS; do
             if [ -e "$dir/BUILD.bazel" ]; then
@@ -464,6 +478,7 @@ jobs:
             fi
             rm -f "$dir/android/abi_gki_protected_exports_"* 2>/dev/null || echo "No protected exports in $dir"
           done
+          
           # Remove build review
           if grep -q 'check_defconfig' kernel_platform/common/build.config.gki; then
             sed -i 's/check_defconfig//' kernel_platform/common/build.config.gki
@@ -502,6 +517,7 @@ jobs:
           # SUBLEVEL only passes the value before modification, because spoofing does not affect the original source state
           echo "SUBLEVEL=$SUBLEVEL" >> $GITHUB_ENV
           ORIG_VERSION=$(awk '/^VERSION =/ {v=$3} /^PATCHLEVEL =/ {p=$3} /^SUBLEVEL =/ {s=$3} END {print v"."p"."s}' ./common/Makefile)
+          
           # Force modify SUBLEVEL (kernel level)
           RESUBLEVEL="${{ github.event.inputs.RESUBLEVEL }}"
           if [ -n "$RESUBLEVEL" ]; then
@@ -510,6 +526,7 @@ jobs:
           else
             echo "SUBLEVEL not specified, keeping default"
           fi
+          
           # Read modified version
           NEW_VERSION=$(awk '/^VERSION =/ {v=$3} /^PATCHLEVEL =/ {p=$3} /^SUBLEVEL =/ {s=$3} END {print v"."p"."s}' ./common/Makefile)
           # CKERNEL_VERSION (3 digits): Full kernel version after modification or unmodified, used to spoof the system
@@ -522,6 +539,7 @@ jobs:
             echo "Kernel Version:$ORIG_VERSION No changes"
             echo "CKERNEL_VERSION=$ORIG_VERSION" >> $GITHUB_ENV
           fi
+          
           # Numeric conversion of kernel version, only the first two digits do not include SUBLEVEL
           echo "KERNEL_SHORT_PATCH_VERSION=$(echo $NEW_VERSION | cut -d. -f1,2 | tr '.' '_')" >> $GITHUB_ENV
 
@@ -555,12 +573,15 @@ jobs:
           cd kernel_workspace/kernel_platform
           SUFFIX="${{ github.event.inputs.SUFFIX }}"
           FAST_BUILD="${{ github.event.inputs.FAST_BUILD }}"
+          
           for f in ./common/scripts/setlocalversion ./"$KERNEL_REPOS"/scripts/setlocalversion ./external/dtc/scripts/setlocalversion; do
             [ -f "$f" ] || continue
             echo "Modifying: $f"
+            
             # Remove -dirty
             sed -i 's/ -dirty//g' "$f"
             sed -i '$i res=$(echo "$res" | sed '\''s/-dirty//g'\'')' "$f"
+            
             if grep -q 'KERNELVERSION.*scm_version' "$f"; then
               echo "Detected NEW setlocalversion format"
               sed -i "s|echo \"\${KERNELVERSION}.*scm_version}\"|echo \"\${KERNELVERSION}-${KANDROID_VERSION}-${SUFFIX}\"|" "$f"
@@ -589,6 +610,7 @@ jobs:
         run: |
           cd kernel_workspace/kernel_platform
           FAST_BUILD="${{ github.event.inputs.FAST_BUILD }}"
+          
           # Generate random number and random hash
           RANDOM_DIGIT=$(od -An -N1 -tu1 < /dev/urandom | tr -d '[:space:]' | awk '{print $1 % 11}')
           RANDOM_HASH=$(od -An -N7 -tx1 /dev/urandom | tr -d '
@@ -624,19 +646,23 @@ jobs:
           cd kernel_workspace/kernel_platform
           KSU_META="${{ github.event.inputs.KSU_META }}"
           FAST_BUILD="${{ github.event.inputs.FAST_BUILD }}"
+          
           # Must contain two separators (at least four fields)
           if [[ "$(grep -o '/' <<< "$KSU_META" | wc -l)" -lt 3 ]]; then
             echo "Error: KSU_META parameter is missing the necessary separator '/', format should be: Manager branch name/Builtin branch name/Custom identifier (optional)/Commit hash (optional)"
             exit 10
           fi
+          
           # Parse fields: branch / custom identifier / manual hash
           IFS='/' read -r KSU_MANAGER_BRANCH KSU_BUILTIN_BRANCH KSU_CUSTOM_TAG MANUAL_HASH <<< "$KSU_META"
           echo "KSU_MANAGER_BRANCH=$KSU_MANAGER_BRANCH" >> $GITHUB_ENV
           echo "KSU_BUILTIN_BRANCH=$KSU_BUILTIN_BRANCH" >> $GITHUB_ENV
           [[ -n "$KSU_CUSTOM_TAG" ]] && echo "Custom version identifier: $KSU_CUSTOM_TAG" || echo "Custom version identifier: Not enabled"
           [[ -n "$MANUAL_HASH" ]] && echo "Manually specified hash: $MANUAL_HASH" || echo "Manually specified hash: Not enabled"
+          
           curl -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/${KSU_MANAGER_BRANCH}/kernel/setup.sh" | bash -s "$KSU_BUILTIN_BRANCH"
           cd ./KernelSU
+          
           if [[ -n "$KSU_CUSTOM_TAG" ]]; then
             echo "KSU_CUSTOM_TAG=$KSU_CUSTOM_TAG" >> "$GITHUB_ENV"
           fi
@@ -644,6 +670,7 @@ jobs:
             git fetch origin "$KSU_BUILTIN_BRANCH" --depth=50
             git checkout "$MANUAL_HASH"
           fi
+          
           KSU_VERSION=$(expr $(git rev-list --count "$KSU_MANAGER_BRANCH" 2>/dev/null || echo 13000) + 30700)
           echo "KSUVER=$KSU_VERSION" >> $GITHUB_ENV
           if [ "$FAST_BUILD" = "false" ]; then
@@ -693,6 +720,7 @@ jobs:
             cp ../susfs4ksu/kernel_patches/fs/* ./common/fs/
             cp ../susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
           fi
+          
           if [[ "${{ github.event.inputs.ZRAM }}" == 1* ]]; then
             echo "Pulling zram patch"
             cp -r ../SukiSU_patch/other/zram/lz4k/include/linux/* ./common/include/linux/
@@ -700,13 +728,16 @@ jobs:
             cp -r ../SukiSU_patch/other/zram/lz4k/crypto/* ./common/crypto/
             cp -r ../SukiSU_patch/other/zram/lz4k_oplus ./common/lib/
           fi
+          
           cd ./common
+          
           if [ "$KMI" == "android13-5.15" ] && [ "$SUBLEVEL" -lt 123 ]; then
             echo "Fixing some bugs caused by kernel version 5.15.0~5.15.123 only supporting old C libraries"
             cp "${GITHUB_WORKSPACE}/kernel_workspace/Action-Build/patches/fix_5.15.legacy" ./fix_5.15.legacy.patch
             patch -p1 < fix_5.15.legacy.patch
             echo "fix_5.15_patch completed"
           fi
+          
           if [ "${{ github.event.inputs.SUSFS_META }}" != "-1" ]; then
             echo "Applying susfs patch"
             patch -p1 < 50_add_susfs_in_gki-${{ env.KANDROID_VERSION }}-${{ env.KERNEL_VERSION }}.patch || true
@@ -746,6 +777,7 @@ jobs:
           PATCH_DIR="${GITHUB_WORKSPACE}/kernel_workspace/Action-Build/patches"
           cd kernel_workspace/kernel_platform/common
           patch -p1 < "${PATCH_DIR}/bbrv3/0001-net-tcp-backport-BBRv3-to-$KMI.patch"
+          
           if [ "$KMI" = "android12-5.10" ]; then
             if ! grep -qF 'int proc_dou8vec_minmax(' ./include/linux/sysctl.h; then
               patch -p1 < "${PATCH_DIR}/bbrv3/sysctl_add_proc_dou8vec_minmax.patch"
@@ -794,92 +826,30 @@ jobs:
           sed -i 's/^\(\t\)struct sysv_shm\b.*sysvshm;/\1\/\/ struct sysv_shm\t\t\tsysvshm;/' include/linux/sched.h
           if [ "$KMI" = "android12-5.10" ]; then
             echo "Fixing sysvipc KABI bypass and POSIX_MQUEUE ABI padding issues for android12-5.10..."
-            sed -i '/^\tconst struct sched_class\t\*sched_class;/a \
-          #ifndef __GENKSYMS__
-          \tstruct sysv_sem\t\t\tsysvsem;
-          \tstruct sysv_shm\t\t\tsysvshm;
-          #endif
-          ' include/linux/sched.h
+            sed -i '/^\tconst struct sched_class\t\*sched_class;/a \\n#ifndef __GENKSYMS__\n\tstruct sysv_sem\t\t\tsysvsem;\n\tstruct sysv_shm\t\t\tsysvshm;\n#endif\n' include/linux/sched.h
             sed -i 's/^\tunsigned long mq_bytes;\t\/\* How many bytes can be allocated to mqueue[?] \*\//\t\/\/unsigned long mq_bytes;\t\/* How many bytes can be allocated to mqueue? *\//' include/linux/sched/user.h
-            sed -i '/struct ratelimit_state ratelimit;/,/ANDROID_OEM_DATA_ARRAY(1, 2);/{/^\tANDROID_KABI_RESERVE(1);/{N;N;s/^\tANDROID_KABI_RESERVE(1);
-          \tANDROID_KABI_RESERVE(2);
-          \tANDROID_OEM_DATA_ARRAY(1, 2);/#if defined(CONFIG_POSIX_MQUEUE)
-          \tANDROID_KABI_USE(1, unsigned long mq_bytes);
-          \tANDROID_KABI_RESERVE(2);
-          \tANDROID_OEM_DATA_ARRAY(1, 2);
-          #else
-          \tANDROID_KABI_RESERVE(1);
-          \tANDROID_KABI_RESERVE(2);
-          \tANDROID_OEM_DATA_ARRAY(1, 2);
-          #endif/}}' include/linux/sched/user.h
+            sed -i '/struct ratelimit_state ratelimit;/,/ANDROID_OEM_DATA_ARRAY(1, 2);/{/^\tANDROID_KABI_RESERVE(1);/{N;N;s/^\tANDROID_KABI_RESERVE(1);\n\tANDROID_KABI_RESERVE(2);\n\tANDROID_OEM_DATA_ARRAY(1, 2);/#if defined(CONFIG_POSIX_MQUEUE)\n\tANDROID_KABI_USE(1, unsigned long mq_bytes);\n\tANDROID_KABI_RESERVE(2);\n\tANDROID_OEM_DATA_ARRAY(1, 2);\n#else\n\tANDROID_KABI_RESERVE(1);\n\tANDROID_KABI_RESERVE(2);\n\tANDROID_OEM_DATA_ARRAY(1, 2);\n#endif/}}' include/linux/sched/user.h
           # Check sched.h and modify KABI slots or pointers
           elif grep -q "sched_dl_entity.*\*dl_server" include/linux/sched.h; then
             echo "✅ Detected dl_server pointer, using packed union scheme"
-            sed -i 's|\tstruct sched_entity\t\tse;|#ifdef CONFIG_SYSVIPC
-          \tunion {
-          \t\tchar __kabi_ignored_0;
-          \t\tstruct sysv_sem\t\t\tsysvsem;
-          \t}__attribute__((packed));
-          \tunion {
-          \t\tchar __kabi_ignored_1;
-          \t\tstruct sysv_shm\t\t\tsysvshm;
-          \t}__attribute__((packed));
-          #endif
-          \tstruct sched_entity\t\tse;|' include/linux/sched.h
-          elif grep -q "ANDROID_KABI_USE(1," include/linux/sched.h; then
+            sed -i 's|\tstruct sched_entity\t\tse;|#ifdef CONFIG_SYSVIPC\n\tunion {\n\t\tchar __kabi_ignored_0;\n\t\tstruct sysv_sem\t\t\tsysvsem;\n\t}__attribute__((packed));\n\tunion {\n\t\tchar __kabi_ignored_1;\n\t\tstruct sysv_shm\t\t\tsysvshm;\n\t}__attribute__((packed));\n#endif\n\n\tstruct sched_entity\t\tse;|' include/linux/sched.h
+          elif grep -q "ANDROID_KABI_USE(1," include/linux/sched.h; then 
             echo "✅ Detected USE(1), using slots 6,7,8"
-            sed -i -e '/ANDROID_KABI_RESERVE(6);/{N;N;s|\tANDROID_KABI_RESERVE(6);
-          \tANDROID_KABI_RESERVE(7);
-          \tANDROID_KABI_RESERVE(8);|#ifdef CONFIG_SYSVIPC
-          \tANDROID_KABI_USE(6, struct sysv_sem sysvsem);
-          \t_ANDROID_KABI_REPLACE(ANDROID_KABI_RESERVE(7); ANDROID_KABI_RESERVE(8), struct sysv_shm sysvshm);
-          #else
-          \tANDROID_KABI_RESERVE(6);
-          \tANDROID_KABI_RESERVE(7);
-          \tANDROID_KABI_RESERVE(8);
-          #endif|;}' include/linux/sched.h
+            sed -i -e '/ANDROID_KABI_RESERVE(6);/{N;N;s|\tANDROID_KABI_RESERVE(6);\n\tANDROID_KABI_RESERVE(7);\n\tANDROID_KABI_RESERVE(8);|#ifdef CONFIG_SYSVIPC\n\tANDROID_KABI_USE(6, struct sysv_sem sysvsem);\n\t_ANDROID_KABI_REPLACE(ANDROID_KABI_RESERVE(7); ANDROID_KABI_RESERVE(8), struct sysv_shm sysvshm);\n#else\n\tANDROID_KABI_RESERVE(6);\n\tANDROID_KABI_RESERVE(7);\n\tANDROID_KABI_RESERVE(8);\n#endif|;}' include/linux/sched.h
           elif grep -q "ANDROID_KABI_RESERVE(1);" include/linux/sched.h; then
             echo "✅ Detected RESERVE(1), using slots 1,2,3"
-            sed -i -e '/ANDROID_KABI_RESERVE(1);/{N;N;N;N;N;N;N;s|\tANDROID_KABI_RESERVE(1);
-          \tANDROID_KABI_RESERVE(2);
-          \tANDROID_KABI_RESERVE(3);
-          \tANDROID_KABI_RESERVE(4);
-          \tANDROID_KABI_RESERVE(5);
-          \tANDROID_KABI_RESERVE(6);
-          \tANDROID_KABI_RESERVE(7);
-          \tANDROID_KABI_RESERVE(8);|#ifdef CONFIG_SYSVIPC
-          \tANDROID_KABI_USE(1, struct sysv_sem sysvsem);
-          \t_ANDROID_KABI_REPLACE(ANDROID_KABI_RESERVE(2); ANDROID_KABI_RESERVE(3), struct sysv_shm sysvshm);
-          #else
-          \tANDROID_KABI_RESERVE(1);
-          \tANDROID_KABI_RESERVE(2);
-          \tANDROID_KABI_RESERVE(3);
-          #endif
-          \tANDROID_KABI_RESERVE(4);
-          \tANDROID_KABI_RESERVE(5);
-          \tANDROID_KABI_RESERVE(6);
-          \tANDROID_KABI_RESERVE(7);
-          \tANDROID_KABI_RESERVE(8);|;}' include/linux/sched.h
+            sed -i -e '/ANDROID_KABI_RESERVE(1);/{N;N;N;N;N;N;N;s|\tANDROID_KABI_RESERVE(1);\n\tANDROID_KABI_RESERVE(2);\n\tANDROID_KABI_RESERVE(3);\n\tANDROID_KABI_RESERVE(4);\n\tANDROID_KABI_RESERVE(5);\n\tANDROID_KABI_RESERVE(6);\n\tANDROID_KABI_RESERVE(7);\n\tANDROID_KABI_RESERVE(8);|#ifdef CONFIG_SYSVIPC\n\tANDROID_KABI_USE(1, struct sysv_sem sysvsem);\n\t_ANDROID_KABI_REPLACE(ANDROID_KABI_RESERVE(2); ANDROID_KABI_RESERVE(3), struct sysv_shm sysvshm);\n#else\n\tANDROID_KABI_RESERVE(1);\n\tANDROID_KABI_RESERVE(2);\n\tANDROID_KABI_RESERVE(3);\n#endif\n\tANDROID_KABI_RESERVE(4);\n\tANDROID_KABI_RESERVE(5);\n\tANDROID_KABI_RESERVE(6);\n\tANDROID_KABI_RESERVE(7);\n\tANDROID_KABI_RESERVE(8);|;}' include/linux/sched.h
           elif grep -q "ANDROID_KABI_RESERVE(3);" include/linux/sched.h; then
             echo "✅ fallback, using slots 3,4,5"
-            sed -i -e '/ANDROID_KABI_RESERVE(3);/{N;N;N;s|\tANDROID_KABI_RESERVE(3);
-          \tANDROID_KABI_RESERVE(4);
-          \tANDROID_KABI_RESERVE(5);
-          \tANDROID_KABI_RESERVE(6);|#ifdef CONFIG_SYSVIPC
-          \tANDROID_KABI_USE(3, struct sysv_sem sysvsem);
-          \t_ANDROID_KABI_REPLACE(ANDROID_KABI_RESERVE(4); ANDROID_KABI_RESERVE(5), struct sysv_shm sysvshm);
-          #else
-          \tANDROID_KABI_RESERVE(3);
-          \tANDROID_KABI_RESERVE(4);
-          \tANDROID_KABI_RESERVE(5);
-          #endif
-          \tANDROID_KABI_RESERVE(6);|;}' include/linux/sched.h
+            sed -i -e '/ANDROID_KABI_RESERVE(3);/{N;N;N;s|\tANDROID_KABI_RESERVE(3);\n\tANDROID_KABI_RESERVE(4);\n\tANDROID_KABI_RESERVE(5);\n\tANDROID_KABI_RESERVE(6);|#ifdef CONFIG_SYSVIPC\n\tANDROID_KABI_USE(3, struct sysv_sem sysvsem);\n\t_ANDROID_KABI_REPLACE(ANDROID_KABI_RESERVE(4); ANDROID_KABI_RESERVE(5), struct sysv_shm sysvshm);\n#else\n\tANDROID_KABI_RESERVE(3);\n\tANDROID_KABI_RESERVE(4);\n\tANDROID_KABI_RESERVE(5);\n#endif\n\tANDROID_KABI_RESERVE(6);|;}' include/linux/sched.h
           else
             echo "❌ Could not precisely match KABI slots or corresponding pointers through context"
             exit 9
           fi
+          
           echo "Returning ghost tasks for oplus_bsp_midas module to avoid null pointer crashes..."
           patch -p1 --forward < "${PATCH_DIR}/ghost-task-for-midas.patch" || true
+          
           if [ "$KMI" = "android16-6.12" ]; then
             rm -f include/uapi/linux/ntsync.h
             rm -f drivers/misc/ntsync.c
@@ -980,7 +950,9 @@ jobs:
           cd kernel_workspace/kernel_platform/common
           CONFIG_FILE=./arch/arm64/configs/gki_defconfig
           MAKEFILE=./kernel/Makefile
+          
           declare -a HIDE_CONFIGS=()
+          
           set_config() {
             local val="$1"
             local key="${val%%=*}"
@@ -990,37 +962,33 @@ jobs:
           { print }
           ' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE" || rm -f "${CONFIG_FILE}.tmp"
             else
-              printf '%s
-          ' "$val" >> "$CONFIG_FILE"
+              printf '%s\n' "$val" >> "$CONFIG_FILE"
             fi
           }
+          
           set_hide_config() {
             local val="$1"
             local key="${val%%=*}"
             set_config "$val"
             HIDE_CONFIGS+=("$key")
           }
+          
           inject_fake_config() {
             [ "${#HIDE_CONFIGS[@]}" -eq 0 ] && return 0
             local marker="# --- fake_config injector ---"
             if ! grep -qF "$marker" "$MAKEFILE"; then
               {
-                printf '
-          %s
-          ' "$marker"
-                printf 'ifneq ($(strip $(CONFIG_FAKE_DISABLE)),)
-          '
-                printf '$(obj)/config_data: $(KCONFIG_CONFIG) FORCE
-          '
-                printf '\t$(Q)sed $(foreach opt,$(CONFIG_FAKE_DISABLE),-e '"'"'s|^$(opt)=.*|# $(opt) is not set|'"'"') $(KCONFIG_CONFIG) > $@
-          '
-                printf 'endif
-          '
+                printf '\n%s\n' "$marker"
+                printf 'ifneq ($(strip $(CONFIG_FAKE_DISABLE)),)\n'
+                printf '$(obj)/config_data: $(KCONFIG_CONFIG) FORCE\n'
+                printf '\t$(Q)sed $(foreach opt,$(CONFIG_FAKE_DISABLE),-e '"'"'s|^$(opt)=.*|# $(opt) is not set|'"'"') $(KCONFIG_CONFIG) > $@\n'
+                printf 'endif\n'
               } >> "$MAKEFILE"
             fi
             echo "CONFIG_FAKE_DISABLE=${HIDE_CONFIGS[*]}" >> "$GITHUB_ENV"
           }
           trap 'inject_fake_config' EXIT
+          
           # ReSukiSU configuration
           set_config "CONFIG_KSU=y"
           set_config "CONFIG_KSU_MULTI_MANAGER_SUPPORT=y"
@@ -1028,6 +996,7 @@ jobs:
           if [[ -n "$KSU_CUSTOM_TAG" ]]; then
             set_config "CONFIG_KSU_FULL_NAME_FORMAT=\"%TAG_NAME%-${KSU_CUSTOM_TAG}@${KSU_BUILTIN_BRANCH}[%COMMIT_SHA%]\""
           fi
+          
           # KPM configuration
           if [ "${{ github.event.inputs.KPM }}" = "KPM" ] || [ "${{ github.event.inputs.KPM }}" = "N/A" ]; then
             set_config "CONFIG_KPM=y"
@@ -1035,6 +1004,7 @@ jobs:
           if [ "${{ github.event.inputs.KPM }}" = "KPN" ]; then
             set_config "CONFIG_KPM=n"
           fi
+          
           # SUSFS configuration
           if [ "${{ github.event.inputs.SUSFS_META }}" != "-1" ]; then
             set_config "CONFIG_KSU_SUSFS=y"
@@ -1050,9 +1020,11 @@ jobs:
           else
             set_config "CONFIG_KSU_SUSFS=n"
           fi
+          
           # TMPFS configuration*
           set_config "CONFIG_TMPFS_XATTR=y"
           set_config "CONFIG_TMPFS_POSIX_ACL=y"
+          
           # BBR & ECN configuration*
           if [ "${{ github.event.inputs.CCM }}" = "true" ]; then
             set_hide_config "CONFIG_TCP_CONG_ADVANCED=y"
@@ -1069,11 +1041,13 @@ jobs:
             set_config "CONFIG_IPV6_ECN=y"
             set_config "CONFIG_IP_NF_TARGET_ECN=y"
           fi
+          
           # Re-Kernel configuration*
           if [ "${{ github.event.inputs.RE_KERNEL }}" = "true" ]; then
             set_config "CONFIG_REKERNEL=y"
             set_config "CONFIG_REKERNEL_NETWORK=y"
           fi
+          
           # ZRAM configuration*
           if [[ "${{ github.event.inputs.ZRAM }}" == 1* ]]; then
             set_config "CONFIG_CRYPTO_LZ4HC=y"
@@ -1083,10 +1057,12 @@ jobs:
             set_config "CONFIG_CRYPTO_LZ4K_OPLUS=y"
             set_config "CONFIG_ZRAM_WRITEBACK=y"
           fi
+          
           # LSM configuration*
           if [ "${{ github.event.inputs.LSM_BBG }}" = "true" ]; then
             set_config "CONFIG_BBG=y"
           fi
+          
           # DROID_SPACES configuration*
           if [ "${{ github.event.inputs.DROID_SPACES }}" = "true" ]; then
             set_config "CONFIG_NTSYNC=y"
@@ -1101,6 +1077,7 @@ jobs:
             set_config "CONFIG_NETFILTER_XT_TARGET_LOG=y"
             set_config "CONFIG_NETFILTER_XT_MATCH_RECENT=y"
           fi
+          
           # IPSET & IPv6_NAT & TTL configuration*
           if [ "${{ github.event.inputs.NETFILTER }}" = "true" ]; then
             if [[ "$KERNEL_VERSION" != "6.12" && "${CPU}" != mt* ]]; then
@@ -1137,6 +1114,7 @@ jobs:
             set_config "CONFIG_IP_NF_MANGLE=y"
             set_config "CONFIG_IP6_NF_MANGLE=y"
           fi
+          
           # Build dependency adjustments and optimizations
           if [ "$KERNEL_VERSION" = "5.15" ] && [[ "$CPU" == mt* ]]; then
             set_config "CONFIG_OPLUS_SYSTEM_KERNEL=y"
@@ -1172,9 +1150,7 @@ jobs:
               if grep -q 'UTS_VERSION=' "$f"; then
                 perl -pi -e "s{UTS_VERSION=\"\\\$\\(.*?\\)\"}{UTS_VERSION=\"#1 SMP PREEMPT $DATESTR\"}" "$f"
               else
-                perl -0777 -pi -e "s{cat <<EOF}{cat <<EOF
-          #undef UTS_VERSION
-          #define UTS_VERSION \"#1 SMP PREEMPT $DATESTR\" } unless /UTS_VERSION/" "$f"
+                perl -0777 -pi -e "s{cat <<EOF}{cat <<EOF\n#undef UTS_VERSION\n#define UTS_VERSION \"#1 SMP PREEMPT $DATESTR\" } unless /UTS_VERSION/" "$f"
               fi
             fi
           done
@@ -1190,12 +1166,14 @@ jobs:
         id: fast_build
         run: |
           cd kernel_workspace/kernel_platform
+          
           # Auto detect LLVM_IAS
           if [[ -f ./common/build.config.arm ]] && grep -q '^LLVM_IAS=1' ./common/build.config.arm; then
             USE_LLVM_IAS=true
           else
             USE_LLVM_IAS=false
           fi
+          
           # Force recursive path
           CLANG_PREBUILT_NAME=$(find "$GITHUB_WORKSPACE/kernel_workspace/kernel_platform" -maxdepth 1 -type d -name 'prebuilts*' -exec test -d '{}/clang/host/linux-x86' \; -print | head -1)
           CLANG_PREBUILT_NAME=$(basename "${CLANG_PREBUILT_NAME:-}")
@@ -1208,14 +1186,17 @@ jobs:
             RUST_TOOLS_PREBUILT_NAME=$(basename "${RUST_TOOLS_PREBUILT_NAME:-}")
             echo "✅ RUST_TOOLS_PREBUILT_NAME=$RUST_TOOLS_PREBUILT_NAME"
           fi
+          
           # Read CLANG_PREBUILT_BIN from build.config.common, or use recursive path fallback
           CLANG_PREBUILT_BIN=""
           if [[ -f ./common/build.config.common ]]; then
             CLANG_PREBUILT_BIN=$(grep '^CLANG_PREBUILT_BIN=' ./common/build.config.common | cut -d'=' -f2-)
           fi
+          
           if [[ -z "$CLANG_PREBUILT_BIN" ]]; then
             CLANG_PREBUILT_BIN="${CLANG_PREBUILT_NAME}/clang/host/linux-x86/clang-zakozako/bin"
           fi
+          
           # First try to identify clang-r from CLANG_PREBUILT_BIN, then remove clang-, as CLANG_VERSION
           if [[ "$CLANG_PREBUILT_BIN" =~ clang-(r[0-9a-z]+) ]]; then
             CLANG_VERSION="${BASH_REMATCH[1]}"
@@ -1225,20 +1206,25 @@ jobs:
               CLANG_VERSION=$(grep '^CLANG_VERSION=' ./common/build.config.constants | cut -d'=' -f2 || true)
             fi
           fi
+          
           if [[ -z "$CLANG_VERSION" ]]; then
             echo "⚠️ Could not get Clang version from CLANG_PREBUILT_BIN or build.config.constants, falling back to official build script"
             echo "fallback=true" >> "$GITHUB_OUTPUT"
             echo "Please consider turning off FAST_BUILD and submitting an issue"
             exit 0
           fi
+          
           CLANG_PREBUILT_BIN="${CLANG_PREBUILT_BIN/\$\{CLANG_VERSION\}/$CLANG_VERSION}"
           CLANG_PREBUILT_BIN="${CLANG_PREBUILT_BIN/clang-zakozako/clang-${CLANG_VERSION}}"
+          
           echo "✅ CLANG_PREBUILT_BIN=$CLANG_PREBUILT_BIN"
           echo "✅ CLANG_VERSION=$CLANG_VERSION"
           echo "✅ USE_LLVM_IAS=$USE_LLVM_IAS"
+          
           set +u
           source "$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/build/kernel/_setup_env.sh" 2>/dev/null || true
           set -u
+          
           export PATH="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/$CLANG_PREBUILT_BIN:$PATH"
           CLANG_LIB_PATH="${CLANG_PREBUILT_BIN%/bin}"
           if [[ -d "$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/$CLANG_LIB_PATH/lib" ]]; then
@@ -1251,6 +1237,7 @@ jobs:
           fi
           echo "✅ LIBCLANG_PATH=$LIBCLANG_PATH"
           export PATH="/usr/lib/ccache:$PATH"
+          
           # BINDGEN detection and fallback
           if [[ "$ENABLE_RUST" == "true" ]]; then
             BINDGEN_BIN="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/$CLANG_PREBUILT_NAME/clang-tools/linux-x86/bin/bindgen"
@@ -1269,6 +1256,7 @@ jobs:
               echo "✅ BINDGEN_BIN (cargo): $BINDGEN_BIN"
             fi
           fi
+          
           # PAHOLE detection and fallback
           PAHOLE_BIN="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/$KERNEL_BUILD_TOOLS_PREBUILT_NAME/kernel-build-tools/linux-x86/bin/pahole"
           if [ ! -x "$PAHOLE_BIN" ]; then
@@ -1281,6 +1269,7 @@ jobs:
             echo "❌ pahole completely missing, terminating build"
             exit 13
           fi
+          
           # RUSTC detection and fallback
           if [[ "$ENABLE_RUST" == "true" ]]; then
             RUSTC_BIN="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/$RUST_TOOLS_PREBUILT_NAME/rust/linux-x86/$RUSTC_DIR_VERSION/bin/rustc"
@@ -1296,6 +1285,7 @@ jobs:
               exit 13
             fi
           fi
+          
           LD_WRAPPER=""
           if [ "${{ github.event.inputs.BUILD_NOCACHE }}" = "false" ] && [[ "$KERNEL_VERSION" == 5.* ]]; then
             LDCACHE_DIR="${GITHUB_WORKSPACE}/kernel_workspace/.thinlto-cache"
@@ -1305,20 +1295,18 @@ jobs:
             if [[ -z "$LLD_BIN" ]]; then
               echo "⚠️ ld.lld not found, cannot create ld-wrapper"
             fi
-            printf '#!/bin/bash
-          exec "%s" "$@" --thinlto-cache-dir="%s" --thinlto-cache-policy=cache_size_bytes=3g --thinlto-jobs=%s
-          ' "$LLD_BIN" "$LDCACHE_DIR" "$(nproc --all)" > "$LD_WRAPPER"
+            printf '#!/bin/bash\nexec "%s" "$@" --thinlto-cache-dir="%s" --thinlto-cache-policy=cache_size_bytes=3g --thinlto-jobs=%s\n' "$LLD_BIN" "$LDCACHE_DIR" "$(nproc --all)" > "$LD_WRAPPER"
             chmod +x "$LD_WRAPPER"
             echo "✅ ld-wrapper created: $LD_WRAPPER (lld=$LLD_BIN, cache=$LDCACHE_DIR)"
           fi
           REAL_CLANG_BIN="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/$CLANG_PREBUILT_BIN/clang"
           CC_WRAPPER="$GITHUB_WORKSPACE/kernel_workspace/cc-wrapper"
-          printf '#!/bin/bash
-          exec ccache "%s" "$@"
-          ' "$REAL_CLANG_BIN" > "$CC_WRAPPER"
+          printf '#!/bin/bash\nexec ccache "%s" "$@"\n' "$REAL_CLANG_BIN" > "$CC_WRAPPER"
           chmod +x "$CC_WRAPPER"
           echo "✅ cc-wrapper created: $CC_WRAPPER (clang=$REAL_CLANG_BIN)"
+          
           cd ./common
+          
           # Remap physical paths
           COMMON_REAL_PATH=$(pwd -P)
           PLATFORM_REAL_PATH=$(dirname "$COMMON_REAL_PATH")
@@ -1363,6 +1351,7 @@ jobs:
             scripts/config --file out/.config -d LTO_CLANG_NONE
             scripts/config --file out/.config -d LTO_CLANG_FULL
           fi
+          
           make O=out "${MAKE_ARGS[@]}" olddefconfig --no-print-directory
           make -j"$(nproc --all)" O=out "${MAKE_ARGS[@]}"
           ccache -s
@@ -1432,13 +1421,13 @@ jobs:
         continue-on-error: true
         run: |
           LATEST_RUN_ID=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-          "https://api.github.com/repos/sidex15/susfs4ksu-module/actions/runs?status=success&event=push" | \
-          jq -r '.workflow_runs[] | select(.head_branch == "v1.5.2+") | .id' | head -n 1)
+            "https://api.github.com/repos/sidex15/susfs4ksu-module/actions/runs?status=success&event=push" | \
+            jq -r '.workflow_runs[] | select(.head_branch == "v1.5.2+") | .id' | head -n 1)
           if [ -z "$LATEST_RUN_ID" ]; then
             echo "No successful run found for branch v1.5.2+"
           else
             ARTIFACT_URL=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/sidex15/susfs4ksu-module/actions/runs/$LATEST_RUN_ID/artifacts" | jq -r '.artifacts[0].archive_download_url')
+              "https://api.github.com/repos/sidex15/susfs4ksu-module/actions/runs/$LATEST_RUN_ID/artifacts" | jq -r '.artifacts[0].archive_download_url')
             if [ -n "$ARTIFACT_URL" ]; then
               curl -L -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -o ksu_module_susfs_1.5.2+_CI.zip "$ARTIFACT_URL"
               cp ksu_module_susfs_1.5.2+_CI.zip ./AnyKernel3/
@@ -1460,14 +1449,18 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           MANAGER_ARTIFACT=Manager-release
+          
           echo "Using branch: $KSU_MANAGER_BRANCH"
           echo "Downloading artifact: $MANAGER_ARTIFACT"
+          
           run_id=$(gh api "repos/ReSukiSU/ReSukiSU/actions/workflows/build-manager.yml/runs?branch=$KSU_MANAGER_BRANCH&status=success&event=push&per_page=1" --jq '.workflow_runs[0].id' || echo "")
+          
           if [[ -z "$run_id" ]]; then
             echo "No successful workflow run found on branch $KSU_MANAGER_BRANCH. Skipping download."
             exit 0
           fi
           artifact_url=$(gh api "repos/ReSukiSU/ReSukiSU/actions/runs/$run_id/artifacts" | jq -r ".artifacts[] | select(.name == \"$MANAGER_ARTIFACT\") | .archive_download_url" | head -n1)
+          
           if [[ -z "$artifact_url" ]]; then
             echo "No artifact '$MANAGER_ARTIFACT' found in run $run_id. Skipping download."
             exit 0
@@ -1504,7 +1497,9 @@ jobs:
             echo "upload=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
+          
           unzip "$ZRAM_ZIP" -d ZRAM-Module
+          
           CONFIG_PROP="ZRAM-Module/config.prop"
           if [ -f "$CONFIG_PROP" ]; then
             echo "Modifying config.prop"
@@ -1517,6 +1512,7 @@ jobs:
             echo "upload=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
+          
           target="./ZRAM-Module/zram/zram.ko"
           echo "Searching for zram.ko module file..."
           search_paths=(
