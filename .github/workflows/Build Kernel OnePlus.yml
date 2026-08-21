@@ -404,8 +404,8 @@ jobs:
 
       - name: Install Ccache-ECS
         run: |
-          LIB_DIR="${GITHUB_WORKSPACE}/kernel_workspace/Action-Build/lib"
-          sudo cp -f "$LIB_DIR/ccache" /usr/bin/ccache && sudo chmod +x /usr/bin/ccache
+         LIB_DIR="${GITHUB_WORKSPACE}/kernel_workspace/Action-Build/lib"
+         sudo cp -f "$LIB_DIR/ccache" /usr/bin/ccache && sudo chmod +x /usr/bin/ccache
 
       - name: Restore Ccache
         if: ${{ github.event.inputs.BUILD_NOCACHE == 'false' }}
@@ -613,15 +613,17 @@ jobs:
           
           # Generate random number and random hash
           RANDOM_DIGIT=$(od -An -N1 -tu1 < /dev/urandom | tr -d '[:space:]' | awk '{print $1 % 11}')
-          RANDOM_HASH=$(od -An -N7 -tx1 /dev/urandom | tr -d '
-          ')
+          RANDOM_HASH=$(od -An -N7 -tx1 /dev/urandom | tr -d ' \n')
           RANDOM_SUFFIX="${RANDOM_DIGIT}-o-g${RANDOM_HASH}"
+          
           for f in ./common/scripts/setlocalversion ./"$KERNEL_REPOS"/scripts/setlocalversion ./external/dtc/scripts/setlocalversion; do
             [ -f "$f" ] || continue
             echo "Modifying: $f"
+            
             # Remove -dirty
             sed -i 's/ -dirty//g' "$f"
             sed -i '$i res=$(echo "$res" | sed '\''s/-dirty//g'\'')' "$f"
+            
             if grep -q 'KERNELVERSION.*scm_version' "$f"; then
               echo "Detected NEW setlocalversion format"
               sed -i "s|echo \"\${KERNELVERSION}.*scm_version}\"|echo \"\${KERNELVERSION}-${KANDROID_VERSION}-${RANDOM_SUFFIX}\"|" "$f"
@@ -777,7 +779,6 @@ jobs:
           PATCH_DIR="${GITHUB_WORKSPACE}/kernel_workspace/Action-Build/patches"
           cd kernel_workspace/kernel_platform/common
           patch -p1 < "${PATCH_DIR}/bbrv3/0001-net-tcp-backport-BBRv3-to-$KMI.patch"
-          
           if [ "$KMI" = "android12-5.10" ]; then
             if ! grep -qF 'int proc_dou8vec_minmax(' ./include/linux/sysctl.h; then
               patch -p1 < "${PATCH_DIR}/bbrv3/sysctl_add_proc_dou8vec_minmax.patch"
@@ -806,8 +807,7 @@ jobs:
           RE_DIR="${GITHUB_WORKSPACE}/kernel_workspace/Re-Kernel/LKM-Source"
           cd kernel_workspace/kernel_platform/common
           sed -i '/endmenu/i source "drivers/rekernel/Kconfig"' drivers/Kconfig
-          sed -i '$a \#Re-Kernel Support
-          obj-$(CONFIG_REKERNEL) += rekernel/' drivers/Makefile
+          sed -i '$a \#Re-Kernel Support\nobj-$(CONFIG_REKERNEL) += rekernel/' drivers/Makefile
           mkdir -p drivers/rekernel
           cp -r "${RE_DIR}"/* drivers/rekernel/
           if [ -f BUILD.bazel ]; then
@@ -824,6 +824,7 @@ jobs:
           # Comment out original sysv struct definitions
           sed -i 's/^\(\t\)struct sysv_sem\b.*sysvsem;/\1\/\/ struct sysv_sem\t\t\tsysvsem;/' include/linux/sched.h
           sed -i 's/^\(\t\)struct sysv_shm\b.*sysvshm;/\1\/\/ struct sysv_shm\t\t\tsysvshm;/' include/linux/sched.h
+          
           if [ "$KMI" = "android12-5.10" ]; then
             echo "Fixing sysvipc KABI bypass and POSIX_MQUEUE ABI padding issues for android12-5.10..."
             sed -i '/^\tconst struct sched_class\t\*sched_class;/a \\n#ifndef __GENKSYMS__\n\tstruct sysv_sem\t\t\tsysvsem;\n\tstruct sysv_shm\t\t\tsysvshm;\n#endif\n' include/linux/sched.h
@@ -855,12 +856,10 @@ jobs:
             rm -f drivers/misc/ntsync.c
             echo "Completing IPC NS symbol exports..."
             if ! grep -q 'EXPORT_SYMBOL.*put_ipc_ns' ./ipc/namespace.c; then
-              echo -e '
-          EXPORT_SYMBOL_GPL(put_ipc_ns);' >> ./ipc/namespace.c
+              echo -e '\nEXPORT_SYMBOL_GPL(put_ipc_ns);' >> ./ipc/namespace.c
             fi
             if ! grep -q 'EXPORT_SYMBOL.*init_ipc_ns' ./ipc/msgutil.c; then
-              echo -e '
-          EXPORT_SYMBOL_GPL(init_ipc_ns);' >> ./ipc/msgutil.c
+              echo -e '\nEXPORT_SYMBOL_GPL(init_ipc_ns);' >> ./ipc/msgutil.c
             fi
           fi
           echo "Extending ntsync support..."
@@ -894,6 +893,7 @@ jobs:
           echo "ZRAM_ALGO=$ZRAM_ALGO" >> $GITHUB_ENV
           echo "ZRAM_ALGO_U=${ZRAM_ALGO^^}" >> $GITHUB_ENV
           echo "ZRAM_SIZE=$ZRAM_SIZE" >> $GITHUB_ENV
+          
           PATCH_DIR="${GITHUB_WORKSPACE}/kernel_workspace/SukiSU_patch/other/zram/zram_patch/${{ env.KERNEL_VERSION }}"
           cd kernel_workspace/kernel_platform/common
           if [[ "$KERNEL_VERSION" == "5.10" && "${CPU}" == mt* ]]; then
@@ -958,9 +958,9 @@ jobs:
             local key="${val%%=*}"
             if grep -qF "${key}=" "$CONFIG_FILE" || grep -qF "# ${key} is not set" "$CONFIG_FILE"; then
               VAL="$val" awk -v key="$key" '
-          $0 == "# " key " is not set" || index($0, key "=") == 1 { print ENVIRON["VAL"]; next }
-          { print }
-          ' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE" || rm -f "${CONFIG_FILE}.tmp"
+                $0 == "# " key " is not set" || index($0, key "=") == 1 { print ENVIRON["VAL"]; next }
+                { print }
+              ' "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE" || rm -f "${CONFIG_FILE}.tmp"
             else
               printf '%s\n' "$val" >> "$CONFIG_FILE"
             fi
@@ -1127,8 +1127,8 @@ jobs:
             set_config "CONFIG_RUST=y"
             set_config "CONFIG_ANDROID_BINDER_IPC_RUST=m"
           fi
+          
           # Custom kernel build time, without adding #1 SMP PREEMPT
-
       - name: Custom BUILD_TIME
         if: ${{ github.event.inputs.BUILD_TIME != '-1' }}
         shell: bash
@@ -1178,9 +1178,11 @@ jobs:
           CLANG_PREBUILT_NAME=$(find "$GITHUB_WORKSPACE/kernel_workspace/kernel_platform" -maxdepth 1 -type d -name 'prebuilts*' -exec test -d '{}/clang/host/linux-x86' \; -print | head -1)
           CLANG_PREBUILT_NAME=$(basename "${CLANG_PREBUILT_NAME:-}")
           echo "✅ CLANG_PREBUILT_NAME=$CLANG_PREBUILT_NAME"
+          
           KERNEL_BUILD_TOOLS_PREBUILT_NAME=$(find "$GITHUB_WORKSPACE/kernel_workspace/kernel_platform" -maxdepth 1 -type d -name 'prebuilts*' -exec test -d '{}/kernel-build-tools' \; -print | head -1)
           KERNEL_BUILD_TOOLS_PREBUILT_NAME=$(basename "${KERNEL_BUILD_TOOLS_PREBUILT_NAME:-}")
           echo "✅ KERNEL_BUILD_TOOLS_PREBUILT_NAME=$KERNEL_BUILD_TOOLS_PREBUILT_NAME"
+          
           if [[ "$ENABLE_RUST" == "true" ]]; then
             RUST_TOOLS_PREBUILT_NAME=$(find "$GITHUB_WORKSPACE/kernel_workspace/kernel_platform" -maxdepth 1 -type d -name 'prebuilts*' -exec test -d '{}/rust' \; -print | head -1)
             RUST_TOOLS_PREBUILT_NAME=$(basename "${RUST_TOOLS_PREBUILT_NAME:-}")
@@ -1299,6 +1301,7 @@ jobs:
             chmod +x "$LD_WRAPPER"
             echo "✅ ld-wrapper created: $LD_WRAPPER (lld=$LLD_BIN, cache=$LDCACHE_DIR)"
           fi
+          
           REAL_CLANG_BIN="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/$CLANG_PREBUILT_BIN/clang"
           CC_WRAPPER="$GITHUB_WORKSPACE/kernel_workspace/cc-wrapper"
           printf '#!/bin/bash\nexec ccache "%s" "$@"\n' "$REAL_CLANG_BIN" > "$CC_WRAPPER"
@@ -1314,9 +1317,11 @@ jobs:
           MAP="-fdebug-prefix-map=$ROOT_REAL_PATH=."
           MPMAP="-fmacro-prefix-map=$ROOT_REAL_PATH=."
           FPMAP="-ffile-prefix-map=$ROOT_REAL_PATH=."
+          
           # KCFLAGS
           KCFLAGS="$MAP $FPMAP -no-canonical-prefixes -O2 -pipe -Wno-error -fno-stack-protector -D__ANDROID_COMMON_KERNEL__"
           KCPPFLAGS="$MPMAP"
+          
           MAKE_ARGS=(
             LLVM=1
             ARCH=arm64
@@ -1328,6 +1333,7 @@ jobs:
             KCFLAGS="$KCFLAGS"
             KCPPFLAGS="$KCPPFLAGS"
           )
+          
           if [[ -n "${CONFIG_FAKE_DISABLE:-}" ]]; then
             MAKE_ARGS+=(CONFIG_FAKE_DISABLE="$CONFIG_FAKE_DISABLE")
           fi
@@ -1343,7 +1349,9 @@ jobs:
             MAKE_ARGS+=(RUSTC="$RUSTC_BIN")
             MAKE_ARGS+=(BINDGEN="$BINDGEN_BIN")
           fi
+          
           make O=out "${MAKE_ARGS[@]}" gki_defconfig --no-print-directory
+          
           if [[ "$KERNEL_VERSION" == 5.* ]]; then
             echo "# Set LTO = thin"
             scripts/config --file out/.config -e LTO_CLANG
@@ -1492,6 +1500,7 @@ jobs:
         run: |
           set -e
           ZRAM_ZIP="${GITHUB_WORKSPACE}/kernel_workspace/Action-Build/ZRAM.zip"
+          
           if [ ! -f "$ZRAM_ZIP" ]; then
             echo "❌ ZRAM.zip not found: $ZRAM_ZIP"
             echo "upload=false" >> "$GITHUB_OUTPUT"
