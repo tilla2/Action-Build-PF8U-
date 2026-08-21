@@ -456,10 +456,12 @@ jobs:
           mkdir -p .repo/manifests
           cp "$GITHUB_WORKSPACE/.repo/manifests_fallback/${FILE}.xml" ".repo/manifests/${FILE}.xml"
           BASE_URL="https://github.com/${MANIFEST_REPO}/${MANIFEST_REPO_NAME}.git"
+          
           echo "Initializing repository using $MANIFEST_REPO/$MANIFEST_REPO_NAME($MANIFEST_BRANCH)..."
           repo init -u "$BASE_URL" -b "$MANIFEST_BRANCH" -m "${FILE}.xml" --depth=1 --no-clone-bundle --no-tags
           sed -i -e '/prebuilts\/asuite"/{/ks-kernel\.lnx\.5\.0\.r3-rel/d}' -e '/tools\/tradefederation\/prebuilts"/{/ks-kernel\.lnx\.5\.0\.r3-rel/d}' ".repo/manifests/${FILE}.xml"
           repo sync -c -j$(nproc) --no-clone-bundle --no-tags --force-sync
+          
           KERNEL_REPOS=""
           KERNEL_REPOS_PATH=$(find . -type f -name "build.config.msm.common" | head -n 1)
           if [[ -n "$KERNEL_REPOS_PATH" ]]; then
@@ -508,6 +510,7 @@ jobs:
           else
             echo "No KMI found in build.config* and ACK_SHA files"
           fi
+          
           # Get full kernel version (CD) from Makefile and split
           VERSIONLEVEL=$(awk '/^VERSION =/ {print $3}' ./common/Makefile)
           PATCHLEVEL=$(awk '/^PATCHLEVEL =/ {print $3}' ./common/Makefile)
