@@ -141,7 +141,6 @@ jobs:
               2>/dev/null || true)
               
             if [ -z "$LINE" ]; then
-            
               echo "⚠️ Run ID $RID does not exist or is inaccessible, skipping."
               continue
             fi
