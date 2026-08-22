@@ -226,6 +226,17 @@ fun applyPostPatchFixups() {
             )
         }
     }
+
+    if (kmi == "android16-6.12") {
+        val openC = f("fs/open.c")
+        if (openC.exists() && openC.readText().contains("getname_flags(filename, lookup_flags, NULL)")) {
+            println("Fixing getname_flags calls for 6.12 (3-arg -> 2-arg)")
+            openC.replaceEachLine(
+                Regex("""getname_flags\(filename, lookup_flags, NULL\)"""),
+                "getname_flags(filename, lookup_flags)"
+            )
+        }
+    }
 }
 
 // Main
