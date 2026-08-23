@@ -65,6 +65,11 @@ on:
           - oneplus_pad_3_pro
           - oneplus_pad_4
           - oneplus_ace6_ultra
+      CREATE_RELEASE:
+        type: boolean
+        description: "Do you want to create a release with build metadata?"
+        required: true
+        default: false
       SUSFS_CI:
         type: choice
         description: "SUSFS module branch"
@@ -493,6 +498,7 @@ jobs:
       - name: Kernel Version Handling
         run: |
           cd kernel_workspace/kernel_platform
+          echo "EFFECTIVE_SUFFIX=${{ github.event.inputs.SUFFIX }}" >> "$GITHUB_ENV"
           # Get kernel Android version (KANDROID_VERSION) and kernel version (KERNEL_VERSION 2 digits)
           for f in ./common/build.config.constants ./common/build.config.common; do
             if [ -f "$f" ]; then
@@ -618,6 +624,7 @@ jobs:
           RANDOM_DIGIT=$(od -An -N1 -tu1 < /dev/urandom | tr -d '[:space:]' | awk '{print $1 % 11}')
           RANDOM_HASH=$(od -An -N7 -tx1 /dev/urandom | tr -d ' \n')
           RANDOM_SUFFIX="${RANDOM_DIGIT}-o-g${RANDOM_HASH}"
+          echo "EFFECTIVE_SUFFIX=${RANDOM_SUFFIX}" >> "$GITHUB_ENV"
           
           for f in ./common/scripts/setlocalversion ./"$KERNEL_REPOS"/scripts/setlocalversion ./external/dtc/scripts/setlocalversion; do
             [ -f "$f" ] || continue
@@ -1491,6 +1498,208 @@ jobs:
         run: |
           echo "value=${{ env.ZRAM_ALGO_U && format('_{0}', env.ZRAM_ALGO_U) || '' }}${{ github.event.inputs.KPM == 'KPM' && '_KPM' || github.event.inputs.KPM == 'KPN' && '_KPN' || '' }}${{ github.event.inputs.LSM_BBG == 'true' && '_BBG' || '' }}_ILH${{ github.event.inputs.SCHED_HMBIRD== 'true' && '_HMBIRD' || '' }}${{ github.event.inputs.DROID_SPACES== 'true' && '_DS' || '' }}${{ github.event.inputs.RE_KERNEL == 'true' && '_REKER' || '' }}${{ github.event.inputs.LZ4_UPDATE == 'true' && '_LZ4UPD' || '' }}" >> $GITHUB_OUTPUT
 
+      - name: Collect Build Metadata
+        id: metadata
+        if: ${{ github.event.inputs.CREATE_RELEASE == 'true' }}
+        env:
+          SUFFIX_OUTPUT: ${{ steps.suffix.outputs.value }}
+        run: |
+          set -uo pipefail
+          yn() { [ "$1" = "true" ] && echo "✅ Yes" || echo "❌ No"; }
+          add() { BODY+="$1"$'\n'; }
+
+          # ----- Configuration display label (oneplus_15 -> "OnePlus 15") -----
+          CFG_LABEL="${FILE_BASE:-${{ github.event.inputs.FILE }}}"
+          CFG_LABEL=$(echo "$CFG_LABEL" | sed -E \
+            's/OnePlus([0-9])/OnePlus \1/g;
+             s/RealME([0-9])/RealME \1/g;
+             s/OPPO([0-9])/OPPO \1/g;
+             s/Pad([0-9])/Pad \1/g;
+             s/Nord([0-9])/Nord \1/g;
+             s/Ace([0-9])/Ace \1/g;
+             s/Turbo([0-9])/Turbo \1/g')
+
+          # ----- Manifest URL -----
+          MANIFEST_URL="https://github.com/${MANIFEST_REPO:-unknown}/${MANIFEST_REPO_NAME:-unknown}/tree/${MANIFEST_BRANCH:-unknown}"
+
+          # ----- Build time label -----
+          case "${{ github.event.inputs.BUILD_TIME }}" in
+            -1) BT_LABEL="Disabled (default Makefile value used)";;
+            F|f) BT_LABEL="Live UTC capture at build time (F)";;
+            "") BT_LABEL="Workflow default (\`Fri Dec 12 11:37:03 UTC 2025\`)";;
+            *) BT_LABEL="${{ github.event.inputs.BUILD_TIME }}";;
+          esac
+
+          # ----- Kernel suffix label -----
+          EFFECTIVE_SUFFIX_VAL="${EFFECTIVE_SUFFIX:-}"
+          case "${{ github.event.inputs.SUFFIX }}" in
+            "") SUFFIX_LABEL="Auto-generated RAND_STR -> \`-${EFFECTIVE_SUFFIX_VAL:-<unknown>}\`";;
+            -1) SUFFIX_LABEL="Disabled (suppressed via \`-1\`)";;
+            *)  SUFFIX_LABEL="Custom -> \`-${{ github.event.inputs.SUFFIX }}\`";;
+          esac
+
+          # ----- SUBLEVEL label -----
+          if [ -n "${{ github.event.inputs.RESUBLEVEL }}" ]; then
+            SL_LABEL="Spoofed to \`${{ github.event.inputs.RESUBLEVEL }}\` (real: \`${DKERNEL_VERSION:-?}\` -> spoofed: \`${CKERNEL_VERSION:-?}\`)"
+          else
+            SL_LABEL="No spoof - source SUBLEVEL = \`${SUBLEVEL:-?}\` kept"
+          fi
+
+          # ----- Cache label -----
+          if [ "${{ github.event.inputs.BUILD_NOCACHE }}" = "true" ]; then
+            CACHE_LABEL="Disabled for this build"
+          else
+            OPT_LEVEL="(default build-script flags; no explicit -O set)"
+            [ "${{ github.event.inputs.FAST_BUILD }}" = "true" ] && OPT_LEVEL="-O2"
+            CACHE_LABEL="Enabled - ccached at \`${CCACHE_DIR:-}\` (max 5G); opt: \`${OPT_LEVEL}\`; ThinLTO: $(yn "${{ github.event.inputs.FAST_BUILD }}")"
+          fi
+
+          # ----- ReSukiSU block -----
+          KSU_BLK="Manager branch: \`$KSU_MANAGER_BRANCH\` | Builtin branch: \`$KSU_BUILTIN_BRANCH\` | Source: https://github.com/ReSukiSU/ReSukiSU/tree/$KSU_MANAGER_BRANCH"
+
+          # ----- SuSFS block (kernel patch + runtime module) -----
+          if [ "${{ github.event.inputs.SUSFS_META }}" = "-1" ]; then
+            SUSFS_BLK="Patch not applied (rolled back, SUSFS_META=-1). Module: not bundled. DEV branch selected: $(yn "${{ github.event.inputs.SUSFS_DEV }}")."
+            SUSFS_BRANCH_USED="(disabled)"
+          else
+            if [ "${{ github.event.inputs.SUSFS_DEV }}" = "true" ]; then
+              SUSFS_BRANCH_USED="gki-$KANDROID_VERSION-$KERNEL_VERSION-dev"
+            else
+              SUSFS_BRANCH_USED="gki-$KANDROID_VERSION-$KERNEL_VERSION"
+            fi
+            SUSFS_COMMIT_LABEL="HEAD (latest upstream)"
+            if [ -n "${{ github.event.inputs.SUSFS_META }}" ]; then
+              if echo "${{ github.event.inputs.SUSFS_META }}" | grep -qE '^[0-9]+$'; then
+                SUSFS_COMMIT_LABEL="HEAD~${{ github.event.inputs.SUSFS_META }}"
+              else
+                SUSFS_COMMIT_LABEL="\`${{ github.event.inputs.SUSFS_META }}\`"
+              fi
+            fi
+            MODULE_CHOICE="Not fetched (SUSFS_CI=N/A)"
+            case "${{ github.event.inputs.SUSFS_CI }}" in
+              CI) MODULE_CHOICE="CI artifact from \`sidex15/susfs4ksu-module\` (latest \`v1.5.2+\` CI run)";;
+              Release) MODULE_CHOICE="https://github.com/sidex15/ksu_module_susfs/releases/latest";;
+            esac
+            SUSFS_BLK="Patch **enabled**. Kernel branch: \`$SUSFS_BRANCH_USED\`. Pinned commit: $SUSFS_COMMIT_LABEL. Patch source: https://gitlab.com/simonpunk/susfs4ksu/-/tree/$SUSFS_BRANCH_USED. SuSFS runtime module branch: \`${{ github.event.inputs.SUSFS_CI }}\` ($MODULE_CHOICE). DEV branch selected: $(yn "${{ github.event.inputs.SUSFS_DEV }}")."
+          fi
+
+          # ----- Standalone boolean patches -----
+          [ "${{ github.event.inputs.LZ4_UPDATE }}" = "true" ] && \
+            LZ4_BLK="Enabled ✅ - Source: https://github.com/Numbersf/lz4_oplus" || \
+            LZ4_BLK="Not upgraded"
+
+          if [[ "${{ github.event.inputs.ZRAM }}" == 1* ]]; then
+            ZRAM_ALGO_VAL=$(echo "${{ github.event.inputs.ZRAM }}" | cut -d/ -f2)
+            ZRAM_SIZE_VAL=$(echo "${{ github.event.inputs.ZRAM }}" | cut -d/ -f3)
+            ZRAM_BLK="\`.ko\` shipped ✅ (algo=\`$ZRAM_ALGO_VAL\`, size=\`$ZRAM_SIZE_VAL\` bytes). Patch source: https://github.com/ShirkNeko/SukiSU_patch/tree/main/other/zram"
+          else
+            ZRAM_BLK="Not built (ZRAM disabled)"
+          fi
+
+          if [ "${{ github.event.inputs.CCM }}" = "true" ]; then
+            BBR_VER="BBRv1 only"
+            [ "${KMI:-}" != "android16-6.12" ] && BBR_VER="BBRv1 + BBRv3"
+            NET_BLK="Enabled ✅ - Variant used: \`$BBR_VER\` - ECN enabled (\`CONFIG_IP_ECN\`, \`CONFIG_TCP_ECN\`, \`CONFIG_IPV6_ECN\`). BBRv3 patch source: https://github.com/Numbersf/Action-Build/tree/ReSukiSU/patches/bbrv3/0001-net-tcp-backport-BBRv3-to-$KMI.patch"
+          else
+            NET_BLK="Not enabled"
+          fi
+
+          if [ "${{ github.event.inputs.UNICODE_BYPASS }}" = "true" ]; then
+            if [ "${VERSIONLEVEL:-0}" -lt 6 ]; then UNI_BRANCH="6.1- (pre-6.1 kernels)"
+            else UNI_BRANCH="6.1+ (6.1 and newer)"; fi
+            UNI_BLK="Enabled ✅ - Patch variant: \`$UNI_BRANCH\`. Source: https://github.com/Numbersf/Action-Build/tree/ReSukiSU/patches"
+          else
+            UNI_BLK="Not enabled"
+          fi
+
+          [ "${{ github.event.inputs.SCHED_HMBIRD }}" = "true" ] && \
+            FENG_BLK="Enabled ✅ - Source: https://github.com/Numbersf/SCHED_PATCH/tree/${CPU:-unknown}" || \
+            FENG_BLK="Not enabled (only the OGKI->GKI fallback may apply)"
+
+          [ "${{ github.event.inputs.DROID_SPACES }}" = "true" ] && \
+            DS_BLK="Enabled ✅ - Patch source: https://github.com/Numbersf/Action-Build/tree/ReSukiSU/patches/ntsync" || \
+            DS_BLK="Not enabled"
+
+          [ "${{ github.event.inputs.RE_KERNEL }}" = "true" ] && \
+            REKER_BLK="Enabled ✅ - Source: https://github.com/Sakion-Team/Re-Kernel" || \
+            REKER_BLK="Not enabled"
+
+          [ "${{ github.event.inputs.LSM_BBG }}" = "true" ] && \
+            BBG_BLK="Enabled ✅ - Source: https://github.com/vc-teahouse/Baseband-guard" || \
+            BBG_BLK="Not enabled"
+
+          # ---------------- Compose body ----------------
+          BODY=""
+          add "# $CFG_LABEL - Kernel Build"
+          add ""
+          add "> Automated release generated from **workflow run [#${GITHUB_RUN_ID}](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID})** on branch \`${GITHUB_REF_NAME}\`."
+          add ""
+          add "## 1 · Build Targets"
+          add ""
+          add "| Field | Value |"
+          add "| --- | --- |"
+          add "| Configuration file | \`${{ github.event.inputs.FILE }}\` (displayed as **$CFG_LABEL**) |"
+          add "| Kernel version | \`$CKERNEL_VERSION\` (KMI: \`$KMI\`, Android lib branch: \`$KANDROID_VERSION\`) |"
+          add "| Kernel suffix | $SUFFIX_LABEL |"
+          add "| SUBLEVEL spoof | $SL_LABEL |"
+          add ""
+          add "## 2 · Manager / Modules"
+          add ""
+          add "| Field | Value |"
+          add "| --- | --- |"
+          add "| ReSukiSU | $KSU_BLK |"
+          add "| KPM implementation method | \`${{ github.event.inputs.KPM }}\` |"
+          add "| SuSFS (kernel patch + module) | $SUSFS_BLK |"
+          add ""
+          add "## 3 · Build-Time Configuration"
+          add ""
+          add "| Field | Value |"
+          add "| --- | --- |"
+          add "| Build time used | $BT_LABEL |"
+          add "| Ultra-fast build | $(yn "${{ github.event.inputs.FAST_BUILD }}") |"
+          add "| Build cache | $CACHE_LABEL |"
+          add ""
+          add "## 4 · Patches Applied"
+          add ""
+          add "| Patch | Value |"
+          add "| --- | --- |"
+          add "| LSM_BBG (Baseband Guard) | $BBG_BLK |"
+          add "| Netfilter extensions | $(yn "${{ github.event.inputs.NETFILTER }}") |"
+          add "| Network (BBR + ECN) | $NET_BLK |"
+          add "| Unicode invisible code-point bypass | $UNI_BLK |"
+          add "| Fengchi (HMBIRD v1.0) | $FENG_BLK |"
+          add "| DroidSpaces (ntsync + SYSVIPC) | $DS_BLK |"
+          add "| Re-Kernel | $REKER_BLK |"
+          add "| LZ4 upstream upgrade | $LZ4_BLK |"
+          add "| ZRAM.ko | $ZRAM_BLK |"
+          add ""
+          add "## 5 · Manifest Source"
+          add ""
+          add "| Field | Value |"
+          add "| --- | --- |"
+          add "| Owner | \`$MANIFEST_REPO\` |"
+          add "| Repository | \`$MANIFEST_REPO_NAME\` |"
+          add "| Resolved branch | \`$MANIFEST_BRANCH\` |"
+          add "| URL | $MANIFEST_URL |"
+          add ""
+          add "## 6 · Artifact Tag Suffix"
+          add ""
+          add "Trace suffix appended to artifact names: \`$SUFFIX_OUTPUT\`"
+          add ""
+          add "---"
+          add "Built via [Numbersf/Action-Build (ReSukiSU)](https://github.com/Numbersf/Action-Build/tree/ReSukiSU) - run \`${GITHUB_RUN_ID}\`."
+
+          # ---------------- Outputs ----------------
+          SAFE_TAG="${FILE_BASE:-${{ github.event.inputs.FILE }}}-${CKERNEL_VERSION:-X}-$(date +%s)-${GITHUB_RUN_ID}"
+          SAFE_TAG=$(echo "$SAFE_TAG" | tr ' ' '_')
+          {
+            echo "release_body<<EOF"
+            printf '%s\n' "$BODY"
+            echo "EOF"
+            echo "tag_name=$SAFE_TAG"
+            echo "name=$CFG_LABEL ($CKERNEL_VERSION)${SUFFIX_OUTPUT}"
+          } >> "$GITHUB_OUTPUT"
+          
       - name: Upload AnyKernel3
         uses: actions/upload-artifact@v7
         with:
@@ -1557,6 +1766,24 @@ jobs:
           name: ZRAM-Module_${{ env.KERNEL_VERSION }}_${{ steps.extract_info.outputs.value }}
           path: ZRAM-Module/*
 
+      - name: Prepare Release Assets
+        id: release_assets
+        if: ${{ github.event.inputs.CREATE_RELEASE == 'true' }}
+        env:
+          ASSET_BASE: ${{ steps.metadata.outputs.tag_name }}
+        run: |
+          set -uo pipefail
+          cd "$GITHUB_WORKSPACE"
+          SAFE_TAG=$(echo "$ASSET_BASE" | tr ' ' '_')
+          AK3_ZIP="AnyKernel3_${SAFE_TAG}.zip"
+          ( cd AnyKernel3 && zip -qr "${GITHUB_WORKSPACE}/${AK3_ZIP}" . )
+          echo "ak3_zip=${GITHUB_WORKSPACE}/${AK3_ZIP}" >> "$GITHUB_OUTPUT"
+          if [ -d "ZRAM-Module" ] && [ -n "$( ls -A ZRAM-Module 2>/dev/null )" ]; then
+            ZRAM_ZIP="ZRAM-Module_${SAFE_TAG}.zip"
+            ( cd ZRAM-Module && zip -qr "${GITHUB_WORKSPACE}/${ZRAM_ZIP}" . )
+            echo "zram_zip=${GITHUB_WORKSPACE}/${ZRAM_ZIP}" >> "$GITHUB_OUTPUT"
+          fi
+          
       - name: Check Cache Size Before Save
         if: ${{ github.event.inputs.BUILD_NOCACHE == 'false' }}
         id: cache_size_check
@@ -1596,3 +1823,18 @@ jobs:
 
       - name: Post-build Disk Check
         run: df -h
+        
+      - name: Publish GitHub Release
+        if: ${{ github.event.inputs.CREATE_RELEASE == 'true' }}
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.metadata.outputs.tag_name }}
+          name: ${{ steps.metadata.outputs.name }}
+          body: ${{ steps.metadata.outputs.release_body }}
+          draft: false
+          prerelease: false
+          files: |
+            ${{ steps.release_assets.outputs.ak3_zip }}
+            ${{ steps.release_assets.outputs.zram_zip }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
