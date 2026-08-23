@@ -171,8 +171,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v6
-        
+        uses: actions/checkout@v7
+
       - name: Setup gh CLI
         run: |
           sudo apt update && sudo apt install -y gh zip curl jq
