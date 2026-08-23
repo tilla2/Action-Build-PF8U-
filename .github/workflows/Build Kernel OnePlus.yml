@@ -1,4 +1,9 @@
 name: Build All OnePlus Kernels
+
+permissions:
+  contents: write
+  actions: write
+
 on:
   workflow_dispatch:
     inputs:
