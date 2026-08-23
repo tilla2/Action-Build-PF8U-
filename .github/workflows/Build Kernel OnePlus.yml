@@ -1604,24 +1604,24 @@ jobs:
           fi
           if [ -n "$KREL_FILE" ]; then
             KREL=$(tr -d '[:space:]' < "$KREL_FILE")
-            KREL_ROW="`${KREL}` (read from `${KREL_FILE#"$GITHUB_WORKSPACE"/}`)"
+            KREL_ROW="\`${KREL}\` (read from \`${KREL_FILE#"$GITHUB_WORKSPACE"/}\`)"
           elif [ "$SFX_INPUT" = "-1" ]; then
             KREL_ROW="Not pinned (SUFFIX = -1 leaves stock, git-derived setlocalversion output)"
           else
             KREL="${CKERNEL_VERSION}-${KANDROID_VERSION}-${EFFECTIVE_SUFFIX:-}"
-            KREL_ROW="`${KREL}` (reconstructed: kernel version + `${KANDROID_VERSION}` + suffix)"
+            KREL_ROW="\`${KREL}\` (reconstructed: kernel version + \`${KANDROID_VERSION}\` + suffix)"
           fi
 
           if [ -n "${DKERNEL_VERSION:-}" ]; then
-            SUBLVL_ROW="Spoofed - `${DKERNEL_VERSION}` rebuilt as `${CKERNEL_VERSION}`"
+            SUBLVL_ROW="Spoofed - \`${DKERNEL_VERSION}\` rebuilt as \`${CKERNEL_VERSION}\`"
           else
-            SUBLVL_ROW="No spoof - source SUBLEVEL kept (`${CKERNEL_VERSION}`)"
+            SUBLVL_ROW="No spoof - source SUBLEVEL kept (\`${CKERNEL_VERSION}\`)"
           fi
 
           case "$SFX_INPUT" in
-            -1) SUFFIX_ROW="Disabled (SUFFIX = -1) - setlocalversion left stock (git-derived `-g<hash>` style suffix)" ;;
-            "")  SUFFIX_ROW="Auto-generated RAND_STR `${EFFECTIVE_SUFFIX:-not captured}` - pseudo-official format `<N>-o-g<hash>`: `N` = random 0-10 (mimics commits since tag), `o` = fixed literal borrowed from the OEM tag part, `g<14 hex>` = random 7-byte hash" ;;
-            *)   SUFFIX_ROW="Custom (`${SFX_INPUT}`) - injected verbatim via setlocalversion" ;;
+            -1) SUFFIX_ROW="Disabled (SUFFIX = -1) - setlocalversion left stock (git-derived \`-g<hash>\` style suffix)" ;;
+            "")  SUFFIX_ROW="Auto-generated RAND_STR \`${EFFECTIVE_SUFFIX:-not captured}\` - pseudo-official format \`<N>-o-g<hash>\`: \`N\` = random 0-10 (mimics commits since tag), \`o\` = fixed literal borrowed from the OEM tag part, \`g<14 hex>\` = random 7-byte hash" ;;
+            *)   SUFFIX_ROW="Custom (\`${SFX_INPUT}\`) - injected verbatim via setlocalversion" ;;
           esac
 
           # Page title, release tag and release title
@@ -1651,7 +1651,7 @@ jobs:
           KSU_MANUAL="${KSU_META_IN##*/}"
           KSU_TAG=$(printf '%s' "$KSU_META_IN" | cut -d/ -f3)
           if [ -n "$KSU_MANUAL" ]; then
-            KSU_LATEST="No (pinned to `${KSU_MANUAL}`)"
+            KSU_LATEST="No (pinned to \`${KSU_MANUAL}\`)"
           else
             KSU_LATEST="Yes"
           fi
@@ -1665,17 +1665,17 @@ jobs:
           else
             KSU_CMT="N/A"
           fi
-          KSU_ROW="manager/builtin branches: `${KSU_MANAGER_BRANCH}` / `${KSU_BUILTIN_BRANCH}` - latest: ${KSU_LATEST} - commit: ${KSU_CMT} - integration: [`setup.sh`](https://github.com/ReSukiSU/ReSukiSU/blob/${KSU_MANAGER_BRANCH}/kernel/setup.sh) - manager APK: ${KSU_APK} - source: [ReSukiSU CI](https://github.com/cctv18/ReSukiSU_CI/releases)"
+          KSU_ROW="manager/builtin branches: \`${KSU_MANAGER_BRANCH}\` / \`${KSU_BUILTIN_BRANCH}\` - latest: ${KSU_LATEST} - commit: ${KSU_CMT} - integration: [\`setup.sh\`](https://github.com/ReSukiSU/ReSukiSU/blob/${KSU_MANAGER_BRANCH}/kernel/setup.sh) - manager APK: ${KSU_APK} - source: [ReSukiSU CI](https://github.com/cctv18/ReSukiSU_CI/releases)"
           if [ -n "$KSU_TAG" ]; then
-            KSU_ROW="${KSU_ROW} - custom tag: `${KSU_TAG}`"
+            KSU_ROW="${KSU_ROW} - custom tag: \`${KSU_TAG}\`"
           fi
 
           case "${IN_KPM}" in
             KPM)
-              KPM_ROW="KPM - in-kernel KPM support (`CONFIG_KPM=y`), Image post-processed with `patch_linux` from [ShirkNeko/SukiSU_patch](https://github.com/ShirkNeko/SukiSU_patch)"
+              KPM_ROW="KPM - in-kernel KPM support (\`CONFIG_KPM=y\`), Image post-processed with \`patch_linux\` from [ShirkNeko/SukiSU_patch](https://github.com/ShirkNeko/SukiSU_patch)"
               ;;
             KPN)
-              KPM_ROW="KPN - kpimg embedded into the Image via `kptools` ([Action-Build patches/kpn](https://github.com/Numbersf/Action-Build/tree/ReSukiSU/patches/kpn))"
+              KPM_ROW="KPN - kpimg embedded into the Image via \`kptools\` ([Action-Build patches/kpn](https://github.com/Numbersf/Action-Build/tree/ReSukiSU/patches/kpn))"
               ;;
             *)
               KPM_ROW="N/A - no KernelPatch post-processing"
@@ -1701,20 +1701,20 @@ jobs:
               S_REF="$SUSFS_BRANCH"
             fi
             SUSFS_PATCH_FILE="50_add_susfs_in_gki-${KANDROID_VERSION}-${KERNEL_VERSION}.patch"
-            SUSFS_ROW="Enabled - branch `${SUSFS_BRANCH}` @ ${S_CMT} - patch: [`${SUSFS_PATCH_FILE}`](https://gitlab.com/simonpunk/susfs4ksu/-/blob/${S_REF}/kernel_patches/${SUSFS_PATCH_FILE}) - DEV branch: ${SUSFS_DEV_FLAG}"
+            SUSFS_ROW="Enabled - branch \`${SUSFS_BRANCH}\` @ ${S_CMT} - patch: [\`${SUSFS_PATCH_FILE}\`](https://gitlab.com/simonpunk/susfs4ksu/-/blob/${S_REF}/kernel_patches/${SUSFS_PATCH_FILE}) - DEV branch: ${SUSFS_DEV_FLAG}"
             SM="${IN_SUSFS_META}"
             if [ -n "$SM" ]; then
               if printf '%s' "$SM" | grep -Eq '^[0-9]+$'; then
-                SUSFS_ROW="${SUSFS_ROW} - revision: rolled back `${SM}` commits from branch HEAD"
+                SUSFS_ROW="${SUSFS_ROW} - revision: rolled back \`${SM}\` commits from branch HEAD"
               else
-                SUSFS_ROW="${SUSFS_ROW} - revision pinned to `${SM}`"
+                SUSFS_ROW="${SUSFS_ROW} - revision pinned to \`${SM}\`"
               fi
             else
               SUSFS_ROW="${SUSFS_ROW} - revision: latest upstream"
             fi
             case "${IN_SUSFS_CI}" in
               CI)
-                SUSFS_MOD_ROW="CI build - latest `v1.5.2+` artifact from [sidex15/susfs4ksu-module](https://github.com/sidex15/susfs4ksu-module), bundled into AnyKernel3"
+                SUSFS_MOD_ROW="CI build - latest \`v1.5.2+\` artifact from [sidex15/susfs4ksu-module](https://github.com/sidex15/susfs4ksu-module), bundled into AnyKernel3"
                 ;;
               Release)
                 SUSFS_MOD_ROW="Stable release from [sidex15/ksu_module_susfs](https://github.com/sidex15/ksu_module_susfs/releases), bundled into AnyKernel3"
@@ -1734,7 +1734,7 @@ jobs:
           if [ "${IN_BUILD_TIME}" = "-1" ]; then
             BT_ROW="Disabled (-1) - default kernel timestamps"
           else
-            BT_ROW="`${KBUILD_BUILD_TIMESTAMP:-not captured}`"
+            BT_ROW="\`${KBUILD_BUILD_TIMESTAMP:-not captured}\`"
           fi
 
           if [ "${IN_FAST_BUILD}" = "true" ]; then
@@ -1751,7 +1751,7 @@ jobs:
             CACHE_ROW="Disabled for this build (BUILD_NOCACHE)"
           else
             if [ "${IN_FAST_BUILD}" = "true" ]; then
-              CACHE_OPT="`-O2` (KCFLAGS)"
+              CACHE_OPT="\`-O2\` (KCFLAGS)"
             else
               CACHE_OPT="toolchain defaults"
             fi
@@ -1760,29 +1760,29 @@ jobs:
             else
               CACHE_TLTO="No (the dedicated ThinLTO cache is only wired for 5.x fast builds)"
             fi
-            CACHE_ROW="Enabled - ccache (max 5G) at `${CCACHE_DIR:-}` - opt: ${CACHE_OPT} - ThinLTO cache: ${CACHE_TLTO}"
+            CACHE_ROW="Enabled - ccache (max 5G) at \`${CCACHE_DIR:-}\` - opt: ${CACHE_OPT} - ThinLTO cache: ${CACHE_TLTO}"
           fi
 
           # ------------------------------------------------------------------
           # 4 - Patches Applied (sources point at the exact .patch/.sh files)
           # ------------------------------------------------------------------
           if [ "${IN_LSM_BBG}" = "true" ]; then
-            BBG_ROW="Enabled - LSM baseband/critical-partition write protection, applied by [`setup.sh`](https://github.com/vc-teahouse/Baseband-guard/blob/main/setup.sh) (executed from branch `main` at build time)"
+            BBG_ROW="Enabled - LSM baseband/critical-partition write protection, applied by [\`setup.sh\`](https://github.com/vc-teahouse/Baseband-guard/blob/main/setup.sh) (executed from branch \`main\` at build time)"
           else
             BBG_ROW="Not enabled"
           fi
 
           if [ "${IN_NETFILTER}" = "true" ]; then
-            NETFILTER_ROW="Enabled - re-enables netfilter options stripped from GKI defconfigs (ipset `CONFIG_IP_SET` family, IPv6 NAT, TTL/HopLimit targets and matches), needed by firewall/ad-block/VPN apps - defconfig fragment applied directly by the build workflow (no external patch) - source: [`Build Kernel OnePlus.yml`](${UP_YML})"
+            NETFILTER_ROW="Enabled - re-enables netfilter options stripped from GKI defconfigs (ipset \`CONFIG_IP_SET\` family, IPv6 NAT, TTL/HopLimit targets and matches), needed by firewall/ad-block/VPN apps - defconfig fragment applied directly by the build workflow (no external patch) - source: [\`Build Kernel OnePlus.yml\`](${UP_YML})"
           else
             NETFILTER_ROW="Not enabled"
           fi
 
           if [ "${IN_CCM}" = "true" ]; then
             if [ "${KMI:-}" = "android16-6.12" ]; then
-              NET_ROW="Enabled - BBRv1 + ECN only (defconfig: `CONFIG_TCP_CONG_BBR`, `CONFIG_IP_ECN` / `CONFIG_TCP_ECN` / `CONFIG_IPV6_ECN`) - no BBRv3 backport exists for `android16-6.12`, so no congestion-control patch is applied - source: [`Build Kernel OnePlus.yml`](${UP_YML})"
+              NET_ROW="Enabled - BBRv1 + ECN only (defconfig: \`CONFIG_TCP_CONG_BBR\`, \`CONFIG_IP_ECN\` / \`CONFIG_TCP_ECN\` / \`CONFIG_IPV6_ECN\`) - no BBRv3 backport exists for \`android16-6.12\`, so no congestion-control patch is applied - source: [\`Build Kernel OnePlus.yml\`](${UP_YML})"
             else
-              NET_ROW="Enabled - BBRv1 + BBRv3 + ECN via [`0001-net-tcp-backport-BBRv3-to-${KMI}.patch`](https://github.com/Numbersf/Action-Build/blob/ReSukiSU/patches/bbrv3/0001-net-tcp-backport-BBRv3-to-${KMI}.patch) from [Numbersf/Action-Build patches/bbrv3](https://github.com/Numbersf/Action-Build/tree/ReSukiSU/patches/bbrv3)"
+              NET_ROW="Enabled - BBRv1 + BBRv3 + ECN via [\`0001-net-tcp-backport-BBRv3-to-${KMI}.patch\`](https://github.com/Numbersf/Action-Build/blob/ReSukiSU/patches/bbrv3/0001-net-tcp-backport-BBRv3-to-${KMI}.patch) from [Numbersf/Action-Build patches/bbrv3](https://github.com/Numbersf/Action-Build/tree/ReSukiSU/patches/bbrv3)"
             fi
           else
             NET_ROW="Not enabled"
@@ -1796,7 +1796,7 @@ jobs:
               UNI_FILE="unicode_bypass_fix_6.1+.patch"
               UNI_V="6.1+ (6.1 and newer)"
             fi
-            UNI_ROW="Enabled - fs/unicode invisible code-point read bypass fix, variant `${UNI_V}` - patch: [`${UNI_FILE}`](https://github.com/Numbersf/Action-Build/blob/ReSukiSU/patches/${UNI_FILE})"
+            UNI_ROW="Enabled - fs/unicode invisible code-point read bypass fix, variant \`${UNI_V}\` - patch: [\`${UNI_FILE}\`](https://github.com/Numbersf/Action-Build/blob/ReSukiSU/patches/${UNI_FILE})"
           else
             UNI_ROW="Not enabled"
           fi
@@ -1813,14 +1813,14 @@ jobs:
               SCHED_LINK="[Numbersf/SCHED_PATCH](https://github.com/Numbersf/SCHED_PATCH/tree/${CPU})"
               FENG_URL="https://github.com/Numbersf/SCHED_PATCH/blob/${CPU}/fengchi_${CLEAN_FILE}.patch"
             fi
-            FENG_ROW="Enabled - oplus Fengchi (HMBIRD v1.0) scheduler, [`fengchi_${CLEAN_FILE}.patch`](${FENG_URL}) from ${SCHED_LINK}"
+            FENG_ROW="Enabled - oplus Fengchi (HMBIRD v1.0) scheduler, [\`fengchi_${CLEAN_FILE}.patch\`](${FENG_URL}) from ${SCHED_LINK}"
           else
             HMB_PRESENT="no"
             if ls -d "$KW/kernel_platform/common"/kernel/sched/hmbird* "$KW/kernel_platform/common"/vendor/oplus/kernel/cpu/sched_ext/hmbird* >/dev/null 2>&1; then
               HMB_PRESENT="yes"
             fi
             if [ "${VERSIONLEVEL:-0}" -gt 6 ] || { [ "${VERSIONLEVEL:-0}" -eq 6 ] && [ "${PATCHLEVEL:-0}" -ge 6 ]; }; then
-              FENG_ROW="Not enabled (SCHED_HMBIRD off) - the OGKI to GKI conversion fallback applied [`hmbird_patch.patch`](https://github.com/Numbersf/Action-Build/blob/ReSukiSU/patches/hmbird_patch.patch) (Fengchi code present in final tree: ${HMB_PRESENT}; the dedicated Fengchi patch requires a `${CPU}` branch in Numbersf/SCHED_PATCH)"
+              FENG_ROW="Not enabled (SCHED_HMBIRD off) - the OGKI to GKI conversion fallback applied [\`hmbird_patch.patch\`](https://github.com/Numbersf/Action-Build/blob/ReSukiSU/patches/hmbird_patch.patch) (Fengchi code present in final tree: ${HMB_PRESENT}; the dedicated Fengchi patch requires a \`${CPU}\` branch in Numbersf/SCHED_PATCH)"
             else
               FENG_ROW="Not enabled"
             fi
@@ -1839,7 +1839,7 @@ jobs:
               NT_COMPAT="ntsync_compat_android12-5.10_14.patch"
             fi
             if [ -n "$NT_COMPAT" ]; then
-              DS_ROW="Enabled - lightweight container support: ntsync driver + KABI-safe SYSVIPC integration, applied via [`ntsync_base.patch`](https://github.com/Numbersf/Action-Build/blob/ReSukiSU/patches/ntsync/ntsync_base.patch) + [`${NT_COMPAT}`](https://github.com/Numbersf/Action-Build/blob/ReSukiSU/patches/ntsync/${NT_COMPAT}) + [`ghost-task-for-midas.patch`](https://github.com/Numbersf/Action-Build/blob/ReSukiSU/patches/ghost-task-for-midas.patch) (KABI edits applied inline by the build workflow)"
+              DS_ROW="Enabled - lightweight container support: ntsync driver + KABI-safe SYSVIPC integration, applied via [\`ntsync_base.patch\`](https://github.com/Numbersf/Action-Build/blob/ReSukiSU/patches/ntsync/ntsync_base.patch) + [\`${NT_COMPAT}\`](https://github.com/Numbersf/Action-Build/blob/ReSukiSU/patches/ntsync/${NT_COMPAT}) + [\`ghost-task-for-midas.patch\`](https://github.com/Numbersf/Action-Build/blob/ReSukiSU/patches/ghost-task-for-midas.patch) (KABI edits applied inline by the build workflow)"
             else
               DS_ROW="Enabled - lightweight container support: ntsync driver + KABI-safe SYSVIPC integration ([patches/ntsync](https://github.com/Numbersf/Action-Build/tree/ReSukiSU/patches/ntsync))"
             fi
@@ -1852,9 +1852,9 @@ jobs:
             RK_S=$(gshort "$RK_DIR")
             RK_F=$(gfull "$RK_DIR")
             if [ -n "$RK_F" ]; then
-              REKER_ROW="Enabled - binder IPC optimization LKM (`CONFIG_REKERNEL`), [`LKM-Source`](https://github.com/Sakion-Team/Re-Kernel/tree/${RK_F}/LKM-Source) from [Sakion-Team/Re-Kernel @ ${RK_S}](https://github.com/Sakion-Team/Re-Kernel/tree/${RK_F})"
+              REKER_ROW="Enabled - binder IPC optimization LKM (\`CONFIG_REKERNEL\`), [\`LKM-Source\`](https://github.com/Sakion-Team/Re-Kernel/tree/${RK_F}/LKM-Source) from [Sakion-Team/Re-Kernel @ ${RK_S}](https://github.com/Sakion-Team/Re-Kernel/tree/${RK_F})"
             else
-              REKER_ROW="Enabled - binder IPC optimization LKM (`CONFIG_REKERNEL`), [`LKM-Source`](https://github.com/Sakion-Team/Re-Kernel/tree/main/LKM-Source) from [Sakion-Team/Re-Kernel](https://github.com/Sakion-Team/Re-Kernel)"
+              REKER_ROW="Enabled - binder IPC optimization LKM (\`CONFIG_REKERNEL\`), [\`LKM-Source\`](https://github.com/Sakion-Team/Re-Kernel/tree/main/LKM-Source) from [Sakion-Team/Re-Kernel](https://github.com/Sakion-Team/Re-Kernel)"
             fi
           else
             REKER_ROW="Not enabled"
@@ -1865,9 +1865,9 @@ jobs:
             LZ_S=$(gshort "$LZ_DIR")
             LZ_F=$(gfull "$LZ_DIR")
             if [ -n "$LZ_F" ]; then
-              LZ4_ROW="Enabled - in-kernel LZ4 upgraded to latest upstream via [`apply_lz4_oplus.sh`](https://github.com/Numbersf/lz4_oplus/blob/${LZ_F}/apply_lz4_oplus.sh) from [Numbersf/lz4_oplus @ ${LZ_S}](https://github.com/Numbersf/lz4_oplus/tree/${LZ_F})"
+              LZ4_ROW="Enabled - in-kernel LZ4 upgraded to latest upstream via [\`apply_lz4_oplus.sh\`](https://github.com/Numbersf/lz4_oplus/blob/${LZ_F}/apply_lz4_oplus.sh) from [Numbersf/lz4_oplus @ ${LZ_S}](https://github.com/Numbersf/lz4_oplus/tree/${LZ_F})"
             else
-              LZ4_ROW="Enabled - in-kernel LZ4 upgraded to latest upstream via [`apply_lz4_oplus.sh`](https://github.com/Numbersf/lz4_oplus/blob/main/apply_lz4_oplus.sh) from [Numbersf/lz4_oplus](https://github.com/Numbersf/lz4_oplus)"
+              LZ4_ROW="Enabled - in-kernel LZ4 upgraded to latest upstream via [\`apply_lz4_oplus.sh\`](https://github.com/Numbersf/lz4_oplus/blob/main/apply_lz4_oplus.sh) from [Numbersf/lz4_oplus](https://github.com/Numbersf/lz4_oplus)"
             fi
           else
             LZ4_ROW="Not enabled"
@@ -1886,9 +1886,9 @@ jobs:
             fi
             ZDIR="$KW/SukiSU_patch/other/zram/zram_patch/${KERNEL_VERSION:-}"
             if [ -d "$ZDIR" ]; then
-              ZRAM_ROW="Built - in-tree `zram.ko` with lz4kd/lz4k_oplus support: [`lz4kd.patch`](https://github.com/ShirkNeko/SukiSU_patch/blob/${SU_REF}/other/zram/zram_patch/${KERNEL_VERSION}/lz4kd.patch) + [`lz4k_oplus.patch`](https://github.com/ShirkNeko/SukiSU_patch/blob/${SU_REF}/other/zram/zram_patch/${KERNEL_VERSION}/lz4k_oplus.patch) from ${SU_LINK} - algorithm `${ZRAM_ALGO:-n/a}`, size `${ZRAM_SIZE:-n/a}` bytes (${SIZE_H})"
+              ZRAM_ROW="Built - in-tree \`zram.ko\` with lz4kd/lz4k_oplus support: [\`lz4kd.patch\`](https://github.com/ShirkNeko/SukiSU_patch/blob/${SU_REF}/other/zram/zram_patch/${KERNEL_VERSION}/lz4kd.patch) + [\`lz4k_oplus.patch\`](https://github.com/ShirkNeko/SukiSU_patch/blob/${SU_REF}/other/zram/zram_patch/${KERNEL_VERSION}/lz4k_oplus.patch) from ${SU_LINK} - algorithm \`${ZRAM_ALGO:-n/a}\`, size \`${ZRAM_SIZE:-n/a}\` bytes (${SIZE_H})"
             else
-              ZRAM_ROW="Built - in-tree `zram.ko` - algorithm `${ZRAM_ALGO:-n/a}`, size `${ZRAM_SIZE:-n/a}` bytes (${SIZE_H}) - note: no lz4k patches published for `${KERNEL_VERSION}` in ${SU_LINK} (upstream covers 5.10 to 6.6)"
+              ZRAM_ROW="Built - in-tree \`zram.ko\` - algorithm \`${ZRAM_ALGO:-n/a}\`, size \`${ZRAM_SIZE:-n/a}\` bytes (${SIZE_H}) - note: no lz4k patches published for \`${KERNEL_VERSION}\` in ${SU_LINK} (upstream covers 5.10 to 6.6)"
             fi
           else
             ZRAM_ROW="Not built (ZRAM disabled)"
@@ -1912,7 +1912,7 @@ jobs:
           } >> "$BODY"
           if [ -n "$INTENDED_ROW" ]; then row "Intended for" "$INTENDED_ROW"; fi
           row "Configuration file" "$CFG_LABEL"
-          row "Kernel version" "`${CKERNEL_VERSION}` (KMI: `${KMI}`, Android lib branch: `${KANDROID_VERSION}`)"
+          row "Kernel version" "\`${CKERNEL_VERSION}\` (KMI: \`${KMI}\`, Android lib branch: \`${KANDROID_VERSION}\`)"
           row "Full kernel release" "$KREL_ROW"
           row "Kernel suffix" "$SUFFIX_ROW"
           row "SUBLEVEL spoof" "$SUBLVL_ROW"
@@ -1942,18 +1942,18 @@ jobs:
           printf '\n## 5 - Manifest Source\n\n| Field | Value |\n| --- | --- |\n' >> "$BODY"
           row "Owner" "${MANIFEST_REPO}"
           row "Repository" "${MANIFEST_REPO_NAME}"
-          row "Resolved branch" "`${MANIFEST_BRANCH}`"
+          row "Resolved branch" "\`${MANIFEST_BRANCH}\`"
           row "URL" "${MANIFEST_URL}"
-          row "Requested owner (DYNAMIC_REPO)" "`${IN_DYNAMIC_REPO}`"
+          row "Requested owner (DYNAMIC_REPO)" "\`${IN_DYNAMIC_REPO}\`"
 
           printf '\n## 6 - Naming Identifiers\n\n| Identifier | Value |\n| --- | --- |\n' >> "$BODY"
-          row "Release tag" "`${TAG}`"
+          row "Release tag" "\`${TAG}\`"
           row "Release title" "${REL_TITLE}"
-          row "AK3 asset" "`AnyKernel3_${TAG}.zip`"
+          row "AK3 asset" "\`AnyKernel3_${TAG}.zip\`"
           if [[ "${IN_ZRAM}" == 1* ]]; then
-            row "ZRAM module asset" "`ZRAM-Module_${TAG}.zip`"
+            row "ZRAM module asset" "\`ZRAM-Module_${TAG}.zip\`"
           fi
-          row "Workflow artifact suffix" "`${SUFFIX_VALUE}` (unchanged upstream naming)"
+          row "Workflow artifact suffix" "\`${SUFFIX_VALUE}\` (unchanged upstream naming)"
           {
             printf '\nPatch tokens in tag and asset names: %s\n' "${TPLIST_PRETTY:-none}"
             printf 'Token legend: BBG (Baseband Guard), BBRv1/BBRv3 (TCP congestion control), Netext (netfilter extensions), Unicode (fs/unicode bypass), HMBIRD (Fengchi scheduler), DS (DroidSpaces), REKER (Re-Kernel), LZ4UPD (upstream LZ4), KPM/KPN (KernelPatch method), ZRAM_<algo> (zram.ko algorithm).\n'
