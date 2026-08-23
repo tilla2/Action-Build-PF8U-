@@ -1517,30 +1517,105 @@ jobs:
           echo "::group::Collect Build Metadata"
 
           KW="$GITHUB_WORKSPACE/kernel_workspace"
+          PATCH_CLONE="$KW/Action-Build"
+          # Upstream copy of this workflow - linked as the source for defconfig-only features
+          UP_YML="https://github.com/Numbersf/Action-Build/blob/ReSukiSU/.github/workflows/Build%20Kernel%20OnePlus.yml"
 
           # git short/full hash of a cloned repo (empty if the clone is gone)
           gshort() { git -C "$1" rev-parse --short HEAD 2>/dev/null || echo ""; }
           gfull()  { git -C "$1" rev-parse HEAD 2>/dev/null || echo ""; }
 
+          CFG_FILE="${{ github.event.inputs.FILE }}"
+          SFX_INPUT="${{ github.event.inputs.SUFFIX }}"
+
+          # ------------------------------------------------------------------
+          # 0 - Naming scheme (drives tag, title and asset filenames)
+          # ------------------------------------------------------------------
+          # Marketing codename where known, otherwise the prettified config name.
+          case "$CFG_FILE" in
+            oneplus_15) DEVICE_CODE="Myron"; DEV_DISPLAY="Myron" ;;
+            *)          DEVICE_CODE=$(printf '%s' "${FILE_BASE:-$CFG_FILE}" | tr -d ' ()')
+                        DEV_DISPLAY="" ;;
+          esac
+
+          # Compact tokens for every applied, toggle-driven patch
+          TPLIST=""
+          addtok() { TPLIST="${TPLIST:+${TPLIST}-}$1"; }
+          if [ "${{ github.event.inputs.LSM_BBG }}" = "true" ]; then addtok "BBG"; fi
+          if [ "${{ github.event.inputs.CCM }}" = "true" ]; then
+            if [ "${KMI:-}" = "android16-6.12" ]; then addtok "BBRv1"; else addtok "BBRv3"; fi
+          fi
+          if [ "${{ github.event.inputs.NETFILTER }}" = "true" ]; then addtok "Netext"; fi
+          if [ "${{ github.event.inputs.UNICODE_BYPASS }}" = "true" ]; then addtok "Unicode"; fi
+          if [ "${{ github.event.inputs.SCHED_HMBIRD }}" = "true" ]; then addtok "HMBIRD"; fi
+          if [ "${{ github.event.inputs.DROID_SPACES }}" = "true" ]; then addtok "DS"; fi
+          if [ "${{ github.event.inputs.RE_KERNEL }}" = "true" ]; then addtok "REKER"; fi
+          if [ "${{ github.event.inputs.LZ4_UPDATE }}" = "true" ]; then addtok "LZ4UPD"; fi
+          case "${{ github.event.inputs.KPM }}" in
+            KPM) addtok "KPM" ;;
+            KPN) addtok "KPN" ;;
+          esac
+          if [[ "${{ github.event.inputs.ZRAM }}" == 1* ]]; then
+            if [ -n "${ZRAM_ALGO_U:-}" ]; then addtok "ZRAM_${ZRAM_ALGO_U}"; else addtok "ZRAM"; fi
+          fi
+          TPLIST_PRETTY=$(printf '%s' "$TPLIST" | sed 's/-/ + /g')
+
           # ------------------------------------------------------------------
           # 1 - Build Targets
           # ------------------------------------------------------------------
-          INTENDED="Redmi K90 Pro Max / Poco F8 Ultra (myron)"
-
-          # Pretty device name only: FILE_BASE (OnePlus15) -> "OnePlus 15"
-          CFG_LABEL=$(printf '%s' "${FILE_BASE:-${{ github.event.inputs.FILE }}}" | sed -E 's/([A-Za-z])([0-9])/\1 \2/g')
-
-          if [ -n "${DKERNEL_VERSION:-}" ]; then
-            SUBLVL_ROW="Spoofed - \`${DKERNEL_VERSION}\` rebuilt as \`${CKERNEL_VERSION}\`"
-          else
-            SUBLVL_ROW="No spoof - source SUBLEVEL kept (\`${CKERNEL_VERSION}\`)"
+          # "Intended for" row only for configs with a verified marketing identity
+          INTENDED_ROW=""
+          if [ "$CFG_FILE" = "oneplus_15" ]; then
+            INTENDED_ROW="Redmi K90 Pro Max / Poco F8 Ultra (myron)"
           fi
 
-          SFX_INPUT="${{ github.event.inputs.SUFFIX }}"
+          # Pretty device name only: FILE_BASE (OnePlus15) -> "OnePlus 15"
+          CFG_LABEL=$(printf '%s' "${FILE_BASE:-$CFG_FILE}" | sed -E 's/([A-Za-z])([0-9])/\1 \2/g')
+
+          # Full kernel release string: prefer the file the build actually produced
+          KREL=""
+          OUT_DIR="$KW/kernel_platform/out"
+          KREL_FILE=$({ find "$OUT_DIR" -type f -name kernel.release 2>/dev/null || true; } | head -n 1)
+          if [ -z "$KREL_FILE" ]; then
+            KREL_FILE=$({ find "$KW" -maxdepth 12 -type f -name kernel.release 2>/dev/null || true; } | head -n 1)
+          fi
+          if [ -n "$KREL_FILE" ]; then
+            KREL=$(tr -d '[:space:]' < "$KREL_FILE")
+            KREL_ROW="`${KREL}` (read from `${KREL_FILE#"$GITHUB_WORKSPACE"/}`)"
+          elif [ "$SFX_INPUT" = "-1" ]; then
+            KREL_ROW="Not pinned (SUFFIX = -1 leaves stock, git-derived setlocalversion output)"
+          else
+            KREL="${CKERNEL_VERSION}-${KANDROID_VERSION}-${EFFECTIVE_SUFFIX:-}"
+            KREL_ROW="`${KREL}` (reconstructed: kernel version + `${KANDROID_VERSION}` + suffix)"
+          fi
+
+          if [ -n "${DKERNEL_VERSION:-}" ]; then
+            SUBLVL_ROW="Spoofed - `${DKERNEL_VERSION}` rebuilt as `${CKERNEL_VERSION}`"
+          else
+            SUBLVL_ROW="No spoof - source SUBLEVEL kept (`${CKERNEL_VERSION}`)"
+          fi
+
           case "$SFX_INPUT" in
-            -1) SUFFIX_ROW="Disabled (SUFFIX = -1)" ;;
-            "")  SUFFIX_ROW="Auto-generated RAND_STR -> \`${EFFECTIVE_SUFFIX:-not captured}\`" ;;
-            *)   SUFFIX_ROW="Custom - \`${EFFECTIVE_SUFFIX:-$SFX_INPUT}\`" ;;
+            -1) SUFFIX_ROW="Disabled (SUFFIX = -1) - setlocalversion left stock (git-derived `-g<hash>` style suffix)" ;;
+            "")  SUFFIX_ROW="Auto-generated RAND_STR `${EFFECTIVE_SUFFIX:-not captured}` - pseudo-official format `<N>-o-g<hash>`: `N` = random 0-10 (mimics commits since tag), `o` = fixed literal borrowed from the OEM tag part, `g<14 hex>` = random 7-byte hash" ;;
+            *)   SUFFIX_ROW="Custom (`${SFX_INPUT}`) - injected verbatim via setlocalversion" ;;
+          esac
+
+          # Page title, release tag and release title
+          TITLE="${CFG_LABEL}"
+          if [ -n "$DEV_DISPLAY" ]; then TITLE="${TITLE} (${DEV_DISPLAY})"; fi
+
+          NAME_BASE="${DEVICE_CODE}-${CKERNEL_VERSION}"
+          if [ -n "${EFFECTIVE_SUFFIX:-}" ]; then NAME_BASE="${NAME_BASE}-${EFFECTIVE_SUFFIX}"; fi
+          if [ -n "$TPLIST" ]; then NAME_BASE="${NAME_BASE}-${TPLIST}"; fi
+          TAG=$(printf '%s' "$NAME_BASE" | tr ' /' '__')
+
+          REL_TITLE="$TITLE"
+          if [ -n "$KREL" ]; then REL_TITLE="${REL_TITLE} · ${KREL}"; fi
+          if [ -n "$TPLIST_PRETTY" ]; then REL_TITLE="${REL_TITLE} · ${TPLIST_PRETTY}"; fi
+
+          case "$TAG" in
+            ""|*[[:space:]]*) echo "::error::Invalid release tag '$TAG'"; exit 1 ;;
           esac
 
           # ------------------------------------------------------------------
@@ -1553,7 +1628,7 @@ jobs:
           KSU_MANUAL="${KSU_META_IN##*/}"
           KSU_TAG=$(printf '%s' "$KSU_META_IN" | cut -d/ -f3)
           if [ -n "$KSU_MANUAL" ]; then
-            KSU_LATEST="No (pinned to \`${KSU_MANUAL}\`)"
+            KSU_LATEST="No (pinned to `${KSU_MANUAL}`)"
           else
             KSU_LATEST="Yes"
           fi
@@ -1567,17 +1642,17 @@ jobs:
           else
             KSU_CMT="N/A"
           fi
-          KSU_ROW="manager/builtin branches: \`${KSU_MANAGER_BRANCH}\` / \`${KSU_BUILTIN_BRANCH}\` - latest: ${KSU_LATEST} - commit: ${KSU_CMT} - manager APK: ${KSU_APK} - source: [ReSukiSU CI](https://github.com/cctv18/ReSukiSU_CI/releases)"
+          KSU_ROW="manager/builtin branches: `${KSU_MANAGER_BRANCH}` / `${KSU_BUILTIN_BRANCH}` - latest: ${KSU_LATEST} - commit: ${KSU_CMT} - integration: [`setup.sh`](https://github.com/ReSukiSU/ReSukiSU/blob/${KSU_MANAGER_BRANCH}/kernel/setup.sh) - manager APK: ${KSU_APK} - source: [ReSukiSU CI](https://github.com/cctv18/ReSukiSU_CI/releases)"
           if [ -n "$KSU_TAG" ]; then
-            KSU_ROW="${KSU_ROW} - custom tag: \`${KSU_TAG}\`"
+            KSU_ROW="${KSU_ROW} - custom tag: `${KSU_TAG}`"
           fi
 
           case "${{ github.event.inputs.KPM }}" in
             KPM)
-              KPM_ROW="KPM - in-kernel KPM support (\`CONFIG_KPM=y\`), Image post-processed with \`patch_linux\` from [ShirkNeko/SukiSU_patch](https://github.com/ShirkNeko/SukiSU_patch)"
+              KPM_ROW="KPM - in-kernel KPM support (`CONFIG_KPM=y`), Image post-processed with `patch_linux` from [ShirkNeko/SukiSU_patch](https://github.com/ShirkNeko/SukiSU_patch)"
               ;;
             KPN)
-              KPM_ROW="KPN - kpimg embedded into the Image via \`kptools\` ([Action-Build patches/kpn](https://github.com/Numbersf/Action-Build/tree/ReSukiSU/patches/kpn))"
+              KPM_ROW="KPN - kpimg embedded into the Image via `kptools` ([Action-Build patches/kpn](https://github.com/Numbersf/Action-Build/tree/ReSukiSU/patches/kpn))"
               ;;
             *)
               KPM_ROW="N/A - no KernelPatch post-processing"
@@ -1597,23 +1672,26 @@ jobs:
             S_F=$(gfull "$S_DIR")
             if [ -n "$S_F" ]; then
               S_CMT="[${S_S}](https://gitlab.com/simonpunk/susfs4ksu/-/commit/${S_F})"
+              S_REF="$S_F"
             else
               S_CMT="N/A"
+              S_REF="$SUSFS_BRANCH"
             fi
-            SUSFS_ROW="Enabled - branch \`${SUSFS_BRANCH}\` @ ${S_CMT} - [source](https://gitlab.com/simonpunk/susfs4ksu/-/tree/${SUSFS_BRANCH}) - DEV branch: ${SUSFS_DEV_FLAG}"
+            SUSFS_PATCH_FILE="50_add_susfs_in_gki-${KANDROID_VERSION}-${KERNEL_VERSION}.patch"
+            SUSFS_ROW="Enabled - branch `${SUSFS_BRANCH}` @ ${S_CMT} - patch: [`${SUSFS_PATCH_FILE}`](https://gitlab.com/simonpunk/susfs4ksu/-/blob/${S_REF}/kernel_patches/${SUSFS_PATCH_FILE}) - DEV branch: ${SUSFS_DEV_FLAG}"
             SM="${{ github.event.inputs.SUSFS_META }}"
             if [ -n "$SM" ]; then
               if printf '%s' "$SM" | grep -Eq '^[0-9]+$'; then
-                SUSFS_ROW="${SUSFS_ROW} - revision: rolled back \`${SM}\` commits from branch HEAD"
+                SUSFS_ROW="${SUSFS_ROW} - revision: rolled back `${SM}` commits from branch HEAD"
               else
-                SUSFS_ROW="${SUSFS_ROW} - revision pinned to \`${SM}\`"
+                SUSFS_ROW="${SUSFS_ROW} - revision pinned to `${SM}`"
               fi
             else
               SUSFS_ROW="${SUSFS_ROW} - revision: latest upstream"
             fi
             case "${{ github.event.inputs.SUSFS_CI }}" in
               CI)
-                SUSFS_MOD_ROW="CI build - latest \`v1.5.2+\` artifact from [sidex15/susfs4ksu-module](https://github.com/sidex15/susfs4ksu-module), bundled into AnyKernel3"
+                SUSFS_MOD_ROW="CI build - latest `v1.5.2+` artifact from [sidex15/susfs4ksu-module](https://github.com/sidex15/susfs4ksu-module), bundled into AnyKernel3"
                 ;;
               Release)
                 SUSFS_MOD_ROW="Stable release from [sidex15/ksu_module_susfs](https://github.com/sidex15/ksu_module_susfs/releases), bundled into AnyKernel3"
@@ -1633,7 +1711,7 @@ jobs:
           if [ "${{ github.event.inputs.BUILD_TIME }}" = "-1" ]; then
             BT_ROW="Disabled (-1) - default kernel timestamps"
           else
-            BT_ROW="\`${KBUILD_BUILD_TIMESTAMP:-not captured}\`"
+            BT_ROW="`${KBUILD_BUILD_TIMESTAMP:-not captured}`"
           fi
 
           if [ "${{ github.event.inputs.FAST_BUILD }}" = "true" ]; then
@@ -1650,7 +1728,7 @@ jobs:
             CACHE_ROW="Disabled for this build (BUILD_NOCACHE)"
           else
             if [ "${{ github.event.inputs.FAST_BUILD }}" = "true" ]; then
-              CACHE_OPT="\`-O2\` (KCFLAGS)"
+              CACHE_OPT="`-O2` (KCFLAGS)"
             else
               CACHE_OPT="toolchain defaults"
             fi
@@ -1659,29 +1737,29 @@ jobs:
             else
               CACHE_TLTO="No (the dedicated ThinLTO cache is only wired for 5.x fast builds)"
             fi
-            CACHE_ROW="Enabled - ccache (max 5G) at \`${CCACHE_DIR:-}\` - opt: ${CACHE_OPT} - ThinLTO cache: ${CACHE_TLTO}"
+            CACHE_ROW="Enabled - ccache (max 5G) at `${CCACHE_DIR:-}` - opt: ${CACHE_OPT} - ThinLTO cache: ${CACHE_TLTO}"
           fi
 
           # ------------------------------------------------------------------
-          # 4 - Patches Applied
+          # 4 - Patches Applied (sources point at the exact .patch/.sh files)
           # ------------------------------------------------------------------
           if [ "${{ github.event.inputs.LSM_BBG }}" = "true" ]; then
-            BBG_ROW="Enabled - LSM baseband/critical-partition write protection - source: [vc-teahouse/Baseband-guard](https://github.com/vc-teahouse/Baseband-guard)"
+            BBG_ROW="Enabled - LSM baseband/critical-partition write protection, applied by [`setup.sh`](https://github.com/vc-teahouse/Baseband-guard/blob/main/setup.sh) (executed from branch `main` at build time)"
           else
             BBG_ROW="Not enabled"
           fi
 
           if [ "${{ github.event.inputs.NETFILTER }}" = "true" ]; then
-            NETFILTER_ROW="Enabled - re-enables netfilter options stripped from GKI defconfigs: ipset (\`CONFIG_IP_SET\` family), IPv6 NAT, TTL/HopLimit targets and matches - needed by firewall/ad-blocking/VPN apps. No external patch: defconfig-only, in-tree code - reference: [net/netfilter](https://github.com/torvalds/linux/tree/master/net/netfilter)"
+            NETFILTER_ROW="Enabled - re-enables netfilter options stripped from GKI defconfigs (ipset `CONFIG_IP_SET` family, IPv6 NAT, TTL/HopLimit targets and matches), needed by firewall/ad-block/VPN apps - defconfig fragment applied directly by the build workflow (no external patch) - source: [`Build Kernel OnePlus.yml`](${UP_YML})"
           else
             NETFILTER_ROW="Not enabled"
           fi
 
           if [ "${{ github.event.inputs.CCM }}" = "true" ]; then
             if [ "${KMI:-}" = "android16-6.12" ]; then
-              NET_ROW="Enabled - BBRv1 + ECN only. BBRv3 is not available for \`android16-6.12\`, so no congestion-control patch is applied; in-tree BBRv1 is enabled via \`CONFIG_TCP_CONG_BBR\`, ECN via \`CONFIG_IP_ECN\` / \`CONFIG_TCP_ECN\` / \`CONFIG_IPV6_ECN\` - reference: [net/ipv4/tcp_bbr.c](https://github.com/torvalds/linux/blob/master/net/ipv4/tcp_bbr.c)"
+              NET_ROW="Enabled - BBRv1 + ECN only (defconfig: `CONFIG_TCP_CONG_BBR`, `CONFIG_IP_ECN` / `CONFIG_TCP_ECN` / `CONFIG_IPV6_ECN`) - no BBRv3 backport exists for `android16-6.12`, so no congestion-control patch is applied - source: [`Build Kernel OnePlus.yml`](${UP_YML})"
             else
-              NET_ROW="Enabled - BBRv1 + BBRv3 + ECN via backport patch \`0001-net-tcp-backport-BBRv3-to-${KMI}.patch\` - source: [Numbersf/Action-Build - patches/bbrv3](https://github.com/Numbersf/Action-Build/tree/ReSukiSU/patches/bbrv3)"
+              NET_ROW="Enabled - BBRv1 + BBRv3 + ECN via [`0001-net-tcp-backport-BBRv3-to-${KMI}.patch`](https://github.com/Numbersf/Action-Build/blob/ReSukiSU/patches/bbrv3/0001-net-tcp-backport-BBRv3-to-${KMI}.patch) from [Numbersf/Action-Build patches/bbrv3](https://github.com/Numbersf/Action-Build/tree/ReSukiSU/patches/bbrv3)"
             fi
           else
             NET_ROW="Not enabled"
@@ -1695,28 +1773,53 @@ jobs:
               UNI_FILE="unicode_bypass_fix_6.1+.patch"
               UNI_V="6.1+ (6.1 and newer)"
             fi
-            UNI_ROW="Enabled - fs/unicode invisible code-point read bypass fix, variant \`${UNI_V}\` - patch: [\`${UNI_FILE}\`](https://github.com/Numbersf/Action-Build/blob/ReSukiSU/patches/${UNI_FILE})"
+            UNI_ROW="Enabled - fs/unicode invisible code-point read bypass fix, variant `${UNI_V}` - patch: [`${UNI_FILE}`](https://github.com/Numbersf/Action-Build/blob/ReSukiSU/patches/${UNI_FILE})"
           else
             UNI_ROW="Not enabled"
           fi
 
+          CLEAN_FILE=$(printf '%s' "$CFG_FILE" | sed 's/_bak//')
           if [ "${{ github.event.inputs.SCHED_HMBIRD }}" = "true" ]; then
             SD_DIR="$KW/kernel_platform/common/SCHED_PATCH"
             SD_S=$(gshort "$SD_DIR")
             SD_F=$(gfull "$SD_DIR")
-            CLEAN_FILE="${{ github.event.inputs.FILE }}"
-            CLEAN_FILE="${CLEAN_FILE//_bak/}"
             if [ -n "$SD_F" ]; then
-              FENG_ROW="Enabled - oplus Fengchi (HMBIRD v1.0) scheduler driver, patch \`fengchi_${CLEAN_FILE}.patch\` from [Numbersf/SCHED_PATCH](https://github.com/Numbersf/SCHED_PATCH/tree/${CPU}) @ [${SD_S}](https://github.com/Numbersf/SCHED_PATCH/commit/${SD_F})"
+              SCHED_LINK="[Numbersf/SCHED_PATCH @ ${SD_S}](https://github.com/Numbersf/SCHED_PATCH/tree/${SD_F})"
+              FENG_URL="https://github.com/Numbersf/SCHED_PATCH/blob/${SD_F}/fengchi_${CLEAN_FILE}.patch"
             else
-              FENG_ROW="Enabled - oplus Fengchi (HMBIRD v1.0) scheduler driver, patch \`fengchi_${CLEAN_FILE}.patch\` from [Numbersf/SCHED_PATCH](https://github.com/Numbersf/SCHED_PATCH/tree/${CPU})"
+              SCHED_LINK="[Numbersf/SCHED_PATCH](https://github.com/Numbersf/SCHED_PATCH/tree/${CPU})"
+              FENG_URL="https://github.com/Numbersf/SCHED_PATCH/blob/${CPU}/fengchi_${CLEAN_FILE}.patch"
             fi
+            FENG_ROW="Enabled - oplus Fengchi (HMBIRD v1.0) scheduler, [`fengchi_${CLEAN_FILE}.patch`](${FENG_URL}) from ${SCHED_LINK}"
           else
-            FENG_ROW="Not enabled (only the OGKI->GKI conversion fallback may apply)"
+            HMB_PRESENT="no"
+            if ls -d "$KW/kernel_platform/common"/kernel/sched/hmbird* "$KW/kernel_platform/common"/vendor/oplus/kernel/cpu/sched_ext/hmbird* >/dev/null 2>&1; then
+              HMB_PRESENT="yes"
+            fi
+            if [ "${VERSIONLEVEL:-0}" -gt 6 ] || { [ "${VERSIONLEVEL:-0}" -eq 6 ] && [ "${PATCHLEVEL:-0}" -ge 6 ]; }; then
+              FENG_ROW="Not enabled (SCHED_HMBIRD off) - the OGKI to GKI conversion fallback applied [`hmbird_patch.patch`](https://github.com/Numbersf/Action-Build/blob/ReSukiSU/patches/hmbird_patch.patch) (Fengchi code present in final tree: ${HMB_PRESENT}; the dedicated Fengchi patch requires a `${CPU}` branch in Numbersf/SCHED_PATCH)"
+            else
+              FENG_ROW="Not enabled"
+            fi
           fi
 
           if [ "${{ github.event.inputs.DROID_SPACES }}" = "true" ]; then
-            DS_ROW="Enabled - lightweight container support (ntsync driver + SYSVIPC/user namespaces, KABI-safe integration) - source: [Numbersf/Action-Build - patches/ntsync](https://github.com/Numbersf/Action-Build/tree/ReSukiSU/patches/ntsync)"
+            NT_COMPAT=""
+            if [ -n "${KMI:-}" ]; then
+              if [ -f "$PATCH_CLONE/patches/ntsync/ntsync_compat_${KMI}_${ANDROID_SHORT_VERSION}.patch" ]; then
+                NT_COMPAT="ntsync_compat_${KMI}_${ANDROID_SHORT_VERSION}.patch"
+              else
+                NT_COMPAT="ntsync_compat_${KMI}.patch"
+              fi
+            fi
+            if [[ "$CFG_FILE" == oneplus_10r* ]]; then
+              NT_COMPAT="ntsync_compat_android12-5.10_14.patch"
+            fi
+            if [ -n "$NT_COMPAT" ]; then
+              DS_ROW="Enabled - lightweight container support: ntsync driver + KABI-safe SYSVIPC integration, applied via [`ntsync_base.patch`](https://github.com/Numbersf/Action-Build/blob/ReSukiSU/patches/ntsync/ntsync_base.patch) + [`${NT_COMPAT}`](https://github.com/Numbersf/Action-Build/blob/ReSukiSU/patches/ntsync/${NT_COMPAT}) + [`ghost-task-for-midas.patch`](https://github.com/Numbersf/Action-Build/blob/ReSukiSU/patches/ghost-task-for-midas.patch) (KABI edits applied inline by the build workflow)"
+            else
+              DS_ROW="Enabled - lightweight container support: ntsync driver + KABI-safe SYSVIPC integration ([patches/ntsync](https://github.com/Numbersf/Action-Build/tree/ReSukiSU/patches/ntsync))"
+            fi
           else
             DS_ROW="Not enabled"
           fi
@@ -1726,9 +1829,9 @@ jobs:
             RK_S=$(gshort "$RK_DIR")
             RK_F=$(gfull "$RK_DIR")
             if [ -n "$RK_F" ]; then
-              REKER_ROW="Enabled - binder IPC optimization driver (LKM, \`CONFIG_REKERNEL=y\`) - source: [Sakion-Team/Re-Kernel](https://github.com/Sakion-Team/Re-Kernel) @ [${RK_S}](https://github.com/Sakion-Team/Re-Kernel/commit/${RK_F})"
+              REKER_ROW="Enabled - binder IPC optimization LKM (`CONFIG_REKERNEL`), [`LKM-Source`](https://github.com/Sakion-Team/Re-Kernel/tree/${RK_F}/LKM-Source) from [Sakion-Team/Re-Kernel @ ${RK_S}](https://github.com/Sakion-Team/Re-Kernel/tree/${RK_F})"
             else
-              REKER_ROW="Enabled - binder IPC optimization driver (LKM, \`CONFIG_REKERNEL=y\`) - source: [Sakion-Team/Re-Kernel](https://github.com/Sakion-Team/Re-Kernel)"
+              REKER_ROW="Enabled - binder IPC optimization LKM (`CONFIG_REKERNEL`), [`LKM-Source`](https://github.com/Sakion-Team/Re-Kernel/tree/main/LKM-Source) from [Sakion-Team/Re-Kernel](https://github.com/Sakion-Team/Re-Kernel)"
             fi
           else
             REKER_ROW="Not enabled"
@@ -1739,9 +1842,9 @@ jobs:
             LZ_S=$(gshort "$LZ_DIR")
             LZ_F=$(gfull "$LZ_DIR")
             if [ -n "$LZ_F" ]; then
-              LZ4_ROW="Enabled - in-kernel LZ4 upgraded to latest upstream via \`apply_lz4_oplus.sh\` - source: [Numbersf/lz4_oplus](https://github.com/Numbersf/lz4_oplus) @ [${LZ_S}](https://github.com/Numbersf/lz4_oplus/commit/${LZ_F})"
+              LZ4_ROW="Enabled - in-kernel LZ4 upgraded to latest upstream via [`apply_lz4_oplus.sh`](https://github.com/Numbersf/lz4_oplus/blob/${LZ_F}/apply_lz4_oplus.sh) from [Numbersf/lz4_oplus @ ${LZ_S}](https://github.com/Numbersf/lz4_oplus/tree/${LZ_F})"
             else
-              LZ4_ROW="Enabled - in-kernel LZ4 upgraded to latest upstream via \`apply_lz4_oplus.sh\` - source: [Numbersf/lz4_oplus](https://github.com/Numbersf/lz4_oplus)"
+              LZ4_ROW="Enabled - in-kernel LZ4 upgraded to latest upstream via [`apply_lz4_oplus.sh`](https://github.com/Numbersf/lz4_oplus/blob/main/apply_lz4_oplus.sh) from [Numbersf/lz4_oplus](https://github.com/Numbersf/lz4_oplus)"
             fi
           else
             LZ4_ROW="Not enabled"
@@ -1749,7 +1852,21 @@ jobs:
 
           if [[ "${{ github.event.inputs.ZRAM }}" == 1* ]]; then
             SIZE_H=$(numfmt --to=iec "${ZRAM_SIZE:-0}" 2>/dev/null || printf '%s' "${ZRAM_SIZE:-}")
-            ZRAM_ROW="Built - in-tree \`zram.ko\` with lz4kd + lz4k_oplus support (patches from [ShirkNeko/SukiSU_patch](https://github.com/ShirkNeko/SukiSU_patch)), packaged via the Action-Build ZRAM module template - algorithm \`${ZRAM_ALGO}\` - size \`${ZRAM_SIZE}\` bytes (${SIZE_H})"
+            SU_S=$(gshort "$KW/SukiSU_patch")
+            SU_F=$(gfull "$KW/SukiSU_patch")
+            if [ -n "$SU_F" ]; then
+              SU_REF="$SU_F"
+              SU_LINK="[ShirkNeko/SukiSU_patch @ ${SU_S}](https://github.com/ShirkNeko/SukiSU_patch/tree/${SU_F})"
+            else
+              SU_REF="main"
+              SU_LINK="[ShirkNeko/SukiSU_patch](https://github.com/ShirkNeko/SukiSU_patch)"
+            fi
+            ZDIR="$KW/SukiSU_patch/other/zram/zram_patch/${KERNEL_VERSION:-}"
+            if [ -d "$ZDIR" ]; then
+              ZRAM_ROW="Built - in-tree `zram.ko` with lz4kd/lz4k_oplus support: [`lz4kd.patch`](https://github.com/ShirkNeko/SukiSU_patch/blob/${SU_REF}/other/zram/zram_patch/${KERNEL_VERSION}/lz4kd.patch) + [`lz4k_oplus.patch`](https://github.com/ShirkNeko/SukiSU_patch/blob/${SU_REF}/other/zram/zram_patch/${KERNEL_VERSION}/lz4k_oplus.patch) from ${SU_LINK} - algorithm `${ZRAM_ALGO:-n/a}`, size `${ZRAM_SIZE:-n/a}` bytes (${SIZE_H})"
+            else
+              ZRAM_ROW="Built - in-tree `zram.ko` - algorithm `${ZRAM_ALGO:-n/a}`, size `${ZRAM_SIZE:-n/a}` bytes (${SIZE_H}) - note: no lz4k patches published for `${KERNEL_VERSION}` in ${SU_LINK} (upstream covers 5.10 to 6.6)"
+            fi
           else
             ZRAM_ROW="Not built (ZRAM disabled)"
           fi
@@ -1766,13 +1883,14 @@ jobs:
           row() { printf '| %s | %s |\n' "$1" "$2" >> "$BODY"; }
 
           {
-            printf '# %s - Kernel Build\n\n' "$CFG_LABEL"
+            printf '# %s - Kernel Build\n\n' "$TITLE"
             printf '> Automated release generated from **workflow run [#%s](https://github.com/%s/actions/runs/%s)** on branch `%s`.\n\n' "$GITHUB_RUN_ID" "${{ github.repository }}" "$GITHUB_RUN_ID" "${{ github.ref_name }}"
             printf '## 1 - Build Targets\n\n| Field | Value |\n| --- | --- |\n'
           } >> "$BODY"
-          row "Intended for" "$INTENDED"
+          if [ -n "$INTENDED_ROW" ]; then row "Intended for" "$INTENDED_ROW"; fi
           row "Configuration file" "$CFG_LABEL"
-          row "Kernel version" "\`${CKERNEL_VERSION}\` (KMI: \`${KMI}\`, Android lib branch: \`${KANDROID_VERSION}\`)"
+          row "Kernel version" "`${CKERNEL_VERSION}` (KMI: `${KMI}`, Android lib branch: `${KANDROID_VERSION}`)"
+          row "Full kernel release" "$KREL_ROW"
           row "Kernel suffix" "$SUFFIX_ROW"
           row "SUBLEVEL spoof" "$SUBLVL_ROW"
 
@@ -1801,15 +1919,23 @@ jobs:
           printf '\n## 5 - Manifest Source\n\n| Field | Value |\n| --- | --- |\n' >> "$BODY"
           row "Owner" "${MANIFEST_REPO}"
           row "Repository" "${MANIFEST_REPO_NAME}"
-          row "Resolved branch" "\`${MANIFEST_BRANCH}\`"
+          row "Resolved branch" "`${MANIFEST_BRANCH}`"
           row "URL" "${MANIFEST_URL}"
-          row "Requested owner (DYNAMIC_REPO)" "\`${{ github.event.inputs.DYNAMIC_REPO }}\`"
+          row "Requested owner (DYNAMIC_REPO)" "`${{ github.event.inputs.DYNAMIC_REPO }}`"
 
+          printf '\n## 6 - Naming Identifiers\n\n| Identifier | Value |\n| --- | --- |\n' >> "$BODY"
+          row "Release tag" "`${TAG}`"
+          row "Release title" "${REL_TITLE}"
+          row "AK3 asset" "`AnyKernel3_${TAG}.zip`"
+          if [[ "${{ github.event.inputs.ZRAM }}" == 1* ]]; then
+            row "ZRAM module asset" "`ZRAM-Module_${TAG}.zip`"
+          fi
+          row "Workflow artifact suffix" "`${{ steps.suffix.outputs.value }}` (unchanged upstream naming)"
           {
-            printf '\n## 6 - Artifact Tag Suffix\n\n'
-            printf 'Trace suffix appended to artifact names: \`%s\`\n\n' "${{ steps.suffix.outputs.value }}"
-            printf '%s\n' '---'
-            printf 'Built via [Numbersf/Action-Build (ReSukiSU)](https://github.com/Numbersf/Action-Build/tree/ReSukiSU) - run \`%s\`.\n' "$GITHUB_RUN_ID"
+            printf '\nPatch tokens in tag and asset names: %s\n' "${TPLIST_PRETTY:-none}"
+            printf 'Token legend: BBG (Baseband Guard), BBRv1/BBRv3 (TCP congestion control), Netext (netfilter extensions), Unicode (fs/unicode bypass), HMBIRD (Fengchi scheduler), DS (DroidSpaces), REKER (Re-Kernel), LZ4UPD (upstream LZ4), KPM/KPN (KernelPatch method), ZRAM_<algo> (zram.ko algorithm).\n'
+            printf '\n%s\n' '---'
+            printf 'Built via [Numbersf/Action-Build (ReSukiSU)](https://github.com/Numbersf/Action-Build/tree/ReSukiSU) - run `%s`.\n' "$GITHUB_RUN_ID"
           } >> "$BODY"
 
           # log the body for review in the Actions log
@@ -1819,17 +1945,15 @@ jobs:
             exit 1
           fi
 
-          TAG="${FILE_BASE}-${CKERNEL_VERSION}-$(date +%s)-${GITHUB_RUN_ID}"
-          REL_NAME="${CFG_LABEL} (${CKERNEL_VERSION})${{ steps.suffix.outputs.value }}"
-
           {
             echo "tag_name=$TAG"
-            echo "name=$REL_NAME"
-            echo "release_body<<EOF_METADATA_V2"
+            echo "name=$REL_TITLE"
+            echo "release_body<<EOF_METADATA_V3"
             cat "$BODY"
-            echo "EOF_METADATA_V2"
+            echo "EOF_METADATA_V3"
           } >> "$GITHUB_OUTPUT"
           echo "Metadata collected - tag: $TAG"
+          echo "Metadata collected - title: $REL_TITLE"
           echo "::endgroup::"
           
       - name: Upload AnyKernel3
