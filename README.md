@@ -1,4 +1,4 @@
-**`简体中文`** | [English](README-en.md)
+**`Enlish`** | [简体中文](README-cn.md)
  
 [![Workflow Status](https://img.shields.io/github/actions/workflow/status/Numbersf/Action-Build/Build%20Kernel%20OnePlus.yml?branch=ReSukiSU&label=remote%20build&logo=github-actions&style=flat-square)](https://github.com/Numbersf/Action-Build/actions/workflows/Build%20Kernel%20OnePlus.yml?query=branch%3AReSukiSU) ![Downloads](https://img.shields.io/github/downloads/Numbersf/Action-Build/total)
  
@@ -12,31 +12,31 @@
  
 <img src="https://readme-typing-svg.demolab.com?font=Meslo+Nerd+Font&size=32&duration=2800&pause=2000&color=A855F7&center=true&vCenter=true&width=940&lines=Welcome+to+Action+Build!;Build+Kernels+For+All+OnePlus+Devices;Your+Device,+Your+Rules!;%E6%9B%B4%E9%AB%98%E6%95%88+%E6%9B%B4%E5%85%A8%E9%9D%A2+%E6%9B%B4%E5%BF%AB%E9%80%9F+%E6%9B%B4%E7%A8%B3%E5%AE%9A+%E5%85%A8%E8%87%AA%E5%8A%A8%E5%8C%96">
  
-禁止宣传**没有任何修改**的`fork`仓库，详见[LICENSE](LICENSE)
+Prohibit the promotion of forked repositories with **no modifications**; see [LICENSE](LICENSE)
 <details>
-<summary><strong>点击查看如何fork项目</strong></summary>
+<summary><strong>Click to view how to fork the project</strong></summary>
 <p>
   <img src="https://github.com/Numbersf/Action-Build/blob/ReSukiSU/pic/start.gif" width="500"/>
   <img src="https://github.com/Numbersf/Action-Build/blob/ReSukiSU/pic/start(2).png" width="500"/>
 </p>
-<summary>请注意，如果你想使用其他分支管理器项目，请在fork时关闭“仅复制SukiSU-Ultra分支”</summary>
+<summary>Please note, if you want to use other branch manager projects, make sure to disable 'Copy the SukiSU-Ultra branch only' when forking.</summary>
 </details>
  
 <details>
-<summary><strong>点击查看如何同步fork后的项目到最新</strong></summary>
+<summary><strong>Click to view how to sync the forked project to the latest</strong></summary>
 <p>
   <img src="https://github.com/Numbersf/Action-Build/blob/ReSukiSU/pic/syncfork.png" width="500"/>
 </p>
-<summary>请及时同步!某些更新可能会导致旧版失效报错!如果同步后依旧运行失败请删除并重新fork!完成以上步骤后仍有问题再反馈提交issue</summary>
+<summary>Please sync promptly! Some updates may cause older versions to fail! If it still fails after syncing, delete and fork again! If the issue persists, then submit an issue for feedback.</summary>
 </details>
  
-# 公告
+# Announcements
  
 ------
 > [!NOTE]
->配置文件中最后的一个``_？``后缀是你正在使用系统版本的代号。而无后缀的大部分是出厂``Android``版本。**``Android16``起从``_b``开始重新计算。** 判断具体的适用安卓版本请手动打开清单,手动改成其他代号,前提是它们确实存在。
+> The final ``_？`` suffix in the configuration file represents the code name of the Android version you are currently using.Most entries without a suffix correspond to the factory default ``Android`` version. **Starting from ``Android16``, the suffixes are recalculated beginning from ``_b``.** To determine which Android version a configuration applies to, manually open the list and change the suffix to another code name—provided that the corresponding suffix actually exists.
 > <details>
-> <summary><strong>点击查看详细的版本代号</strong></summary>
+> <summary><strong>Click to view the Android version codes</strong></summary>
 >
 >>`_？ Android19 (？)`
 >
@@ -58,138 +58,138 @@
  
 ------
 > [!IMPORTANT]
->关于要跑多久的问题的数据参考
+>Data reference on the question of how long to run
 >
->|| 平均耗时范围|最大耗时|
+>|| Average Duration Range|Maximum Duration|
 >|------------------|----------------------|------------|
->| `极速构建所有机型` | `1st:17min ~ 36min 2nd:6min ~ 17min` | `40/29min`|
->| `内核版本5.10-5.15使用官方脚本构建` | `20min ~ 35min`| `45min`    |
->| `内核版本6.1-6.12使用官方脚本构建` | `55min ~ 1h12min`| `1h28min` |
+>| `Ultra-fast build for all devices` | `1st:17min ~ 36min 2nd:6min ~ 17min` | `40/29min`|
+>| `Kernel versions 5.10-5.15 built using official script` | `20min ~ 35min`| `45min`    |
+>| `Kernel versions 6.1-6.12 built using official script` | `55min ~ 1h12min`| `1h28min` |
 >
-> >使用ccache第一次可能会减速、仅极速构建生效
+> >Using ccache may slow down the first build; this only applies to ultra-fast builds.
 >
-> >repo工具版本差异可能会影响耗时
+> >Differences in repo tool versions may affect the build time.
 >
->也就是说,如果你运行的时长超过了对应机型的最高时间,请暂停重新运行并查看step,看看有没有占用时间过长的步骤,特别注意Initialize Repo and Sync这一步,受到上游REPO工具链的影响会经常出问题.这一步超过15min可以重新尝试一次,如果依旧失败请等待修复
+>So, if your build time exceeds the maximum time for your model, please stop and rerun, and check the steps, especially the Initialize Repo and Sync step. This often fails due to upstream REPO toolchain issues. If this step takes more than 15min, try again. If it still fails, wait for a fix
  
 ------
 > [!CAUTION]
->请不要在**保``root``更新**时音量下安装模块请使用音量上跳过!现在也基本上不需要安装了,使用``ReSukiSU附加模块``即可  
+> Do not use volume down to install modules during root-retaining updates, use volume up to skip! Generally, installation is no longer necessary, just use the ReSukiSU Add-on Module  
 >
->如果你开启了``ZRAM``算法,请在刷入``Anykernel3``重启**前**安装``ZRAM``模块,部分参数请自行调整。另外``5.10``内核暂不支持开启``ZRAM``算法,因为没有找到``zram.ko``路径,但是生成的``Anykernel3``依旧可用  
+> If you have enabled the ``ZRAM`` algorithm, make sure to install the ``ZRAM`` module **before rebooting** after flashing with ``Anykernel3``. You may need to adjust some parameters manually.The 5.10 kernel is not supported ``ZRAM`` , as the ``zram.ko`` module path could not be found.However, the generated ``Anykernel3`` is still usable  
 >
->``MTK``设备不支持关闭极速构建  
+>``MTK`` devices do not support disabling fast build  
 >
->``OnePlus Ace5``不支持开启风驰,较老的机型即使内核加入也无法使用,不要勉强  
+>``OnePlus Ace5`` does not support enabling Fengchi. Older models cannot use it even if the kernel includes it — do not force it  
 >
->``CAll Build Start UP``是一个极其危险的新工作流文件,**它没有新功能且一切保持默认不可自定义**,新工作流**禁止**普通用户使用!普通用户请使用``Build All OnePlus Kernels``!  
+>``CAll Build Start UP`` is an **extremely dangerous** new workflow.**It has no new features and everything remains default and non-customizable**.This workflow is **strictly prohibited** for regular users and should use ``Build All OnePlus Kernels`` instead!  
 >
  
 ------
  
-# 开发中的功能
-- [ ] Kexec内核热切换支持
-- [ ] 全内核版本风驰支持
-- 牙膏要一点一点挤,显卡要一刀一刀切,PPT要一张一张放,代码要一行一行写,更多功能及优化...敬请期待....
+# Features in Development
+- [ ] Kexec Kernel Hot Swap Support
+- [ ] Full support for all kernel versions of Fengchi
+- Toothpaste should be squeezed bit by bit, GPUs should be cut slice by slice, PPTs should be shown slide by slide, and code should be written line by line — more features and optimizations... stay tuned!
  
-# 更新日志
->小的更新内容将被忽略 更多内容请参看提交
+# Changelog
+> Minor updates will be ignored. For more details, please refer to the commit.
  
-- 新增`FakeConfig(HideConfig)`，用于隐藏`proc/config.gz`内配置项可见性  
+- Added `FakeConfig(HideConfig)` to hide the visibility of config options in `proc/config.gz`.  
 ```
-普通配置项:
+Regular config option:
 set_config "CONFIG_IP_NF_TARGET_ECN=y"
-隐藏配置项:
+Hidden config option:
 set_hide_config "CONFIG_IP6_NF_NAT=y"
 ```  
  
-- 新增`FakePatch`完善多内核等级与`susfs`的兼容问题  
+- Added `FakePatch` to improve compatibility between multiple kernel sublevel and `susfs`.  
  
-- 新增路径递推,完整适配内核版本`6.12+`的`Rust`构建逻辑和`bindgen`、`Kleaf`依赖搜索  
+- Added path recursion, providing full support for `Rust` build logic and `bindgen`/`Kleaf` dependency resolution on kernel version `6.12+`.  
  
-- `lz4`自动跟随上游升级以及自动纠错  
+- `lz4`now automatically follows upstream upgrades and includes automatic error correction.  
  
-- 完整适配`DroidSpaces`+`Ntsync`  
+- Full support for `DroidSpaces`+`Ntsync`.  
  
-- 完整适配`Re:Kernel`,自动跟随上游  
+- Full support for `Re:Kernel`, automatically following upstream changes.  
  
-- 多处启用外部警告-检查`fork源`是否正常、内核后缀构建时间是否存在异常符号调用等  
+- Multiple external warnings enabled — checks whether the `fork source` is normal, if the kernel suffix build time contains abnormal symbol calls, etc.  
  
-- 完整的`KPN`修补支持  
+- Complete `KPN` patch support.  
  
-- 可在设置中直接调整`ZRAM`开关、算法名、大小,自动处理`ZRAM附加模块`,附加模块来自[@FURLC](https://github.com/FURLC)  
+- ZRAM switch, algorithm name, and size can be directly adjusted in settings. Automatically handles `ZRAM additional modules`, with modules provided by [@FURLC](https://github.com/FURLC).  
  
-- 完整版`Unicode Bypass`支持,适配全内核版本  
+- Full `Unicode Bypass` support, compatible with all kernel versions.  
  
-- 首发修复`MTK-5.10`构建报错  
+- First release fixes the `MTK-5.10` build errors.  
  
-- 首发新增支持大量`MTK`机型,清单和路径问题成功被攻克  
+- Initial release with support for a large number of `MTK` devices; manifest list and path issues have been successfully resolved.  
  
-- 支持修改`SUSFS`哈希值进行回退(此项输入`-1`则关闭`SUSFS`)、调用`SUSFS-DEV`开发分支  
+- Supports modifying the `SUSFS` hash for rollback(Entering `-1` in this field will disable `SUSFS`)、Using the `SUSFS-DEV` development branch.  
  
-- 内核版本为`6.6-6.12`支持将设备树中的`type`属性从`HMBIRD_OGKI`替换为`HMBIRD_GKI`;支持开启风驰驱动[@reigadegr](https://github.com/reigadegr) [@cctv18](https://github.com/cctv18) [@Numbersf](https://github.com/Numbersf) [@HanKuCha](https://github.com/HanKuCha)  
+- For kernel versions `6.6-6.12`, supports replacing the `type` property in the device tree from `HMBIRD_OGKI` to `HMBIRD_GKI`; supports enabling Fengchi Driver[@reigadegr](https://github.com/reigadegr) [@cctv18](https://github.com/cctv18) [@Numbersf](https://github.com/Numbersf) [@HanKuCha](https://github.com/HanKuCha)  
  
-- 允许调用第三方动态源码清单仓库,以支持原本不兼容的机型。必须确保源码清单与频道分支的命名符合规范。在第三方清单仓库的`README.md`中,如未定义`CPUD`,可填写任意占位值。此外,极速构建必须保持启用,不可关闭  
+- Allow calling third-party dynamic source manifest repositories to support originally incompatible devices. It is essential to ensure that the naming of the source manifest and channel branches complies with the specifications. In the third-party manifest repository's `README.md`, if `CPUD` is not defined, any placeholder value can be used,the fast build feature must remain enabled and cannot be disabled.  
  
-- 支持`Baseband-guard(LSMBBG)`  
+- Support `Baseband-guard(LSMBBG)`.  
  
-- 支持设置分支、自定义版本标识、修改对应分支的提交哈希来进行回退  
+- Support setting branches、custom version identifiers、fallback hash.  
 ```
-设置分支:分为管理器层和内置层,请按照ReSukiSU仓库频道名进行修改,非开发者禁止修改,不可留空、删除
-自定义版本标识:
-将原先的提交hash改成自定义内容,再将提交hash放在最后 这个可以随意改,不要太长
-这里指的提交hash是内置层
+Set Branch: Divided into manager-layer and built-in-layer. Please modify according to the channel name in the ReSukiSU repository. Do not modify unless you are a developer. Do not leave it empty or remove it.
+Custom Version Tag:
+Replace the original commit hash with your custom content, and move the commit hash to the end. This can be modified freely, but keep it reasonably short.
+The commit hash referred to here is the built-in-layer.
 v3.1.7-f5541e21@builtin
 ↓
-v3.1.7-自定义内容@builtin[f5541e21]
-当你不想启用自定义版本标识时,就留空(builtin/)
-无论是否启用自定义版本标识和回退哈希,必须用三个/(U+002F)隔开,不可删除
+v3.1.7-CustomContent@builtin[f5541e21]
+If you don’t want to use a custom version tag, just leave it empty (e.g. builtin/).
+Regardless of whether the custom version identifier and fallback hash are enabled, they must be separated by three /(U+002F) and cannot be removed.
 ```  
  
-- 全自动化获取内核信息及构建信息  
+- Fully automated retrieval of kernel information and build information.  
  
-- 允许修改内核等级`SUBLEVEL`,用于欺骗系统-解决系统更新后`SUBLEVEL`改变但内核源码没有更新导致的验证而无法开机的问题  
+- Allow modifying `SUBLEVEL`,Used to fix the issue where the device fails to boot after a system update changes the `SUBLEVEL` but the kernel source has not been updated.  
  
-- 允许分批次每次`9`个运行多个工作流,普通用户禁止使用  
+- Allows running multiple workflows in batches of `9` each time.Ordinary users are prohibited from using.  
  
-- 删除`file-map`及编译方式并由主工作流自行选择[@Bouteillepleine](https://github.com/Bouteillepleine)  
+- Remove file-map and build method selection; let the main workflow decide automatically [@Bouteillepleine](https://github.com/Bouteillepleine)  
  
-- 首发支持全机型、全编译方式自定义内核构建时间`UTS_VERSION`  
+- First to support custom kernel build time `UTS_VERSION` for all device models and all build methods.  
  
-- 使用`ccache-ECS`、`ltothin-cache`、`apt-cache`共同加速工作流,仅开启极速构建`fast build`有效,第一次使用、重大更新需要换`key`要重新生成`cache`,可能会降低速度  
+- Use `ccache-ECS`、`ltothin-cache`、`apt-cache` together to speed up the workflow, only effective when `fast build` is enabled.The cache needs to be regenerated by changing the `key` when using it for the first time or after major updates, which may reduce the speed.
 ```
-你可以通过使用delete.yml(name: Workflow and Cache Cleanup)工作流开启“是否删除所有缓存”的选项来删除所有的key
-也可以去
-https://github.com/你的用户名(username)/你的仓库名/actions/caches
-直接手动删除对应的key
-当内核级别更新、GitHub上游工具链改变导致的速度明显变慢时,就需要进行以上操作
+You can delete all keys by enabling the "是否删除所有缓存" option in the delete.yml(name: Workflow and Cache Cleanup) workflow.
+You can also go to
+https://github.com/your-username/your-repository-name/actions/caches
+to manually delete the corresponding keys.  
+When there is a kernel-level update or a significant slowdown caused by changes in the GitHub upstream toolchain, you need to perform the above actions.
 ```  
  
-- 首发适配内核版本`6.6+`的`setlocalversion`文件中`echo`新格式,修复自定义&随机伪官方后缀失效。现在,全机型、全编译方式完美支持此功能  
+- First to support for the kernel version `6.6+` new `setlocalversion` format using `echo`, fixing the issue where custom and randomly-generated pseudo-official suffixes were not applied. Now, this feature is fully supported across all device models and build methods.  
  
-- 修复`ZRAM`无法使用或者打不开非系统应用的问题  
+- Fix issues where `ZRAM` is unusable or unable to launch non-system apps.  
  
-- 修复内核版本介于`5.15.0-5.15.123`之间官方脚本跑不出,极速编译结果有问题[@zzh20188](https://github.com/zzh20188)  
+- Fix the problem that the official script cannot run when the kernel version is between `5.15.0-5.15.123`, and the result of the quick compilation has problems. [@zzh20188](https://github.com/zzh20188)  
  
-- 允许自定义内核后缀← **`beta`**
+- Allow custom kernel suffix← **`beta`**
 ```
-1.当自定义内核后缀为空时,使用随机字符串,不再是默认的“x.xx.xxx-androidxx-8-o-g3b1e97b8b29f”
-2.当自定义启用时,修改内核为“x.xx.xxx-androidxx-自定义内容”,同时也不再保留androidxx-8-o-g3b1e97b8b29f
-3.当使用Fast Build(极速构建)时,为新的源内核信息x.xx.xxx-o-g3b1e97b8b29f添加缺失的内核android版本号,再进行1或2中的操作
+1. When the custom kernel suffix is empty, a random string is used instead of the default “x.xx.xxx-androidxx-8-o-g3b1e97b8b29f”
+2. When custom suffix is enabled, the kernel version is modified to “x.xx.xxx-androidxx-CustomContent”, and the original “androidxx-8-o-g3b1e97b8b29f” is no longer retained.
+3. When using clang make (Fast Build), add the missing kernel android version number to the new source kernel information x.xx.xxx-o-g3b1e97b8b29f, and then perform operations in 1 or 2.
 ```  
  
-- 支持极速编译`(5.10[首发]、5.15[首发]、6.1、6.1+)`  
+- Support fast-build `(5.10[Debut], 5.15[Debut], 6.1, 6.1+)`.  
  
-- 支持显示自己填入的内容在`Debug Show Selected Inputs`这一步,同时工作流名称也可以看到一些东西  
+- Support displaying user-defined inputs during `Debug Show Selected Inputs` step; workflow name will also reflect some values.  
  
-- 从写入 `Anykernel3.zip` 的配置文件后缀中删除潜在的版本代码,替换成精确的 `Android` 版本号`XX.X.(X)`
+- Removed potential version codes from the suffix of `Anykernel3.zip` config file, replaced with exact `Android` version numbers `XX.X.(X)`.
 ```
 AnyKernel3_ReSukiSU_34895_OnePlusAce2Pro_Android16.0.0(5.15.180)_KPM_BBG_ILH_DS_REKER.zip
 AnyKernel3_ReSukiSU_34895_OnePlus11_Android14.1.0(5.15.123)_KPM_BBG_ILH_DS_REKER.zip
 AnyKernel3_ReSukiSU_34895_OnePlus15(AOSP)_Android16.0.0(6.12.23)_KPM_BBG_ILH_DS_REKER.zip
 ```  
  
-- 添加 `zram` 模块的 `LZ4K、LZ4KD` 压缩算法支持[@ShirkNeko](https://github.com/ShirkNeko)  
+- Added support for the `LZ4K、LZ4KD` compression algorithm in the `zram` module.   [@ShirkNeko](https://github.com/ShirkNeko)  
  
-- 支持自动下载最新 `CI/Release` 的 `susfs` 模块并调用 `ksud` 安装、自动获取不同类型的管理器`CI-APK`解压到`Anykernel3`但不安装  
+- Support automatic download of latest `CI` version of `susfs` module and install via `ksud`; also automatically extracts different types manager `CI-APK` but does not install it.  
  

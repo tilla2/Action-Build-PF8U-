@@ -4,7 +4,7 @@ on:
     inputs:
       FILE:
         type: choice
-        description: "配置文件//Configuration file"
+        description: "Configuration file"
         required: true
         default: oneplus_ace2_pro_b
         options:
@@ -67,7 +67,7 @@ on:
           - oneplus_ace6_ultra
       SUSFS_CI:
         type: choice
-        description: "SUSFS模块下载调用方向//SUSFS module branch"
+        description: "SUSFS module branch"
         required: true
         default: N/A
         options:
@@ -76,7 +76,7 @@ on:
           - N/A
       KPM:
         type: choice
-        description: "内核模块实现方式//Kernel module implementation method"
+        description: "Kernel module implementation method"
         required: true
         default: N/A
         options:
@@ -85,99 +85,99 @@ on:
           - N/A
       SUSFS_META:
         type: string
-        description: "回退SUSFS(输入哈希或次数或-1关闭)//Rollback SUSFS (Enter commit hash, count, or -1 to disable)"
+        description: "Rollback SUSFS (Enter commit hash, count, or -1 to disable)"
         required: false
         default: ""
       DYNAMIC_REPO:
         type: string
-        description: "动态清单仓库所有者//Manifest repository owner"
+        description: "Manifest repository owner"
         required: true
         default: "Numbersf"
       BUILD_TIME:
         type: string
-        description: "自定义构建时间(输入F使用UTCT或-1关闭)//Custom build time (Enter F to use UTCT, or -1 to disable)"
+        description: "Custom build time (Enter F to use UTCT, or -1 to disable)"
         required: false
         default: "Fri Dec 12 11:37:03 UTC 2025"
       KSU_META:
         type: string
-        description: "管理器分支名(必填)/内置分支名(必填)/自定义版本标识(留空不修改)/回退分支提交哈希版本(留空不修改)//Manager Branch name (Required) / Builtin branch name (Required) / Custom version identifier (Leave blank to not modify) / Rollback branch commit hash version (Leave blank to not modify)"
+        description: "Manager Branch name (Required) / Builtin branch name (Required) / Custom version identifier (Leave blank to not modify) / Rollback branch commit hash version (Leave blank to not modify)"
         required: false
         default: "main/main/Numbersf/"
       LZ4_UPDATE:
         type: boolean
-        description: "是否升级LZ4到上游最新？//Upgrade LZ4 to the latest upstream?"
+        description: "Upgrade LZ4 to the latest upstream?"
         required: true
         default: false
       ZRAM:
         type: string
-        description: "ZRAM(0关闭1开启)/算法名/大小//ZRAM (0: disable, 1: enable) / Algorithm name / Size"
+        description: "ZRAM (0: disable, 1: enable) / Algorithm name / Size"
         required: true
         default: "0/lz4kd/8589934592"
       SUFFIX:
         type: string
-        description: "自定义内核后缀(不输入使用RAND_STR或-1关闭)//Custom kernel suffix (Leave blank to use RAND_STR, or -1 to disable)"
+        description: "Custom kernel suffix (Leave blank to use RAND_STR, or -1 to disable)"
         required: false
         default: ""
       RESUBLEVEL:
-        description: "自定义内核等级欺骗(SUBLEVEL)//Custom kernel SUBLEVEL spoofing"
+        description: "Custom kernel SUBLEVEL spoofing"
         required: false
         default: ""
       FAST_BUILD:
         type: boolean
-        description: "是否启用极速构建？//Enable ultra-fast build?"
+        description: "Enable ultra-fast build?"
         required: true
         default: true
       LSM_BBG:
         type: boolean
-        description: "是否启用关键分区写入保护模块(BBG)？//Enable critical partition write protection module (BBG)?"
+        description: "Enable critical partition write protection module (BBG)?"
         required: true
         default: true
       NETFILTER:
         type: boolean
-        description: "是否启用网络功能拓展(NETFILTER)？//Enable network feature extensions (NETFILTER)?"
+        description: "Enable network feature extensions (NETFILTER)?"
         required: true
         default: true
       CCM:
         type: boolean
-        description: "是否启用网络拥塞控制与管理机制(BBRv1+BBRv3+ECN)？//Enable network congestion control and management mechanism (BBRv1+BBRv3+ECN)?"
+        description: "Enable network congestion control and management mechanism (BBRv1+BBRv3+ECN)?"
         required: true
         default: true
       UNICODE_BYPASS:
         type: boolean
-        description: "是否添加Unicode不可见字码点绕过读取漏洞修复？//Add patch for Unicode invisible code point read bypass vulnerability?"
+        description: "Add patch for Unicode invisible code point read bypass vulnerability?"
         required: true
         default: false
       SCHED_HMBIRD:
         type: boolean
-        description: "是否添加风驰驱动1.0？//Add Fengchi (HMBIRD) Driver 1.0?"
+        description: "Add Fengchi (HMBIRD) Driver 1.0?"
         required: true
         default: false
       DROID_SPACES:
         type: boolean
-        description: "是否添加轻量级Linux容器支持(DroidSpaces)？//Add lightweight Linux container support (DroidSpaces)?"
+        description: "Add lightweight Linux container support (DroidSpaces)?"
         required: true
         default: false
       RE_KERNEL:
         type: boolean
-        description: "是否添加Re-Kernel？//Add Re-Kernel?"
+        description: "Add Re-Kernel?"
         required: true
         default: false
       SUSFS_DEV:
         type: boolean
-        description: "是否拉取SUSFS-DEV分支？//Pull the SUSFS-DEV branch?"
+        description: "Pull the SUSFS-DEV branch?"
         required: true
         default: false
       SPACE_NOCLEAN:
         type: boolean
-        description: "是否停用空间清扫？//Disable workspace cleaning?"
+        description: "Disable workspace cleaning?"
         required: true
         default: false
       BUILD_NOCACHE:
         type: boolean
-        description: "是否停用此次缓存？//Disable caching for this build?"
+        description: "Disable caching for this build?"
         required: true
         default: false
-
+        
 jobs:
   build:
     name: ${{ github.event.inputs.FAST_BUILD == 'true' && ' [FAST]' || '' }}${{ contains(github.event.inputs.FILE, '_aosp') && ' [AOSP]' || '' }}${{ github.event.inputs.KPM == 'KPM' && ' [KPM]' || github.event.inputs.KPM == 'KPN' && ' [KPN]' || '' }}${{ github.event.inputs.LSM_BBG == 'true' && ' [BBG]' || '' }}${{ github.event.inputs.SCHED_HMBIRD == 'true' && ' [HMBIRD]' || '' }}${{ github.event.inputs.DROID_SPACES == 'true' && ' [DS]' || '' }}${{ startsWith(github.event.inputs.ZRAM, '1/') && ' [ZRAM]' || '' }}${{ github.event.inputs.RE_KERNEL == 'true' && ' [REKER]' || '' }}${{ github.event.inputs.LZ4_UPDATE == 'true' && ' [LZ4UPD]' || '' }}For ${{ github.event.inputs.FILE }} ${{ github.event.inputs.SUFFIX }}
@@ -226,45 +226,45 @@ jobs:
           mkdir -p ".repo/manifests_fallback"
           XML_PATH=".repo/manifests_fallback/${FILE}.xml"
           README_PATH=".repo/manifests_fallback/README.md"
-          echo "处理 FILE=$FILE, CONF=$FILE_CONF, BASE=$FILE_BASE"
+          echo "Processing FILE=$FILE, CONF=$FILE_CONF, BASE=$FILE_BASE"
           echo "FILE_CONF=$FILE_CONF" >> $GITHUB_ENV
           echo "FILE_BASE=$FILE_BASE" >> $GITHUB_ENV
-
-          # 动态调用源码清单仓库，仓库优先级：1️⃣ OnePlusOSS → 2️⃣ Dynamic → 3️⃣ Appendix
+          
+          # Dynamically call source manifest repository, priority: 1️⃣ OnePlusOSS → 2️⃣ Dynamic → 3️⃣ Appendix
           DYNAMIC_REPO_INPUT="${{ github.event.inputs.DYNAMIC_REPO }}"
           declare -A REPOS
           REPOS["OnePlusOSS"]="OnePlusOSS|kernel_manifest"
           REPOS["Dynamic"]="${DYNAMIC_REPO_INPUT}|kernel_manifest"
           REPOS["Appendix"]="Numbersf|Kernel_Manifest_Appendix"
-
+          
           FOUND_REPO=""
           FOUND_BRANCH=""
-
+          
           check_repo() {
             local ENTRY=$1
             local OWNER=${ENTRY%%|*}
             local REPO_NAME=${ENTRY##*|}
-
-            echo "🌐 尝试拉取 ${OWNER}/${REPO_NAME} 分支列表..."
+            
+            echo "🌐 Attempting to fetch branch list for ${OWNER}/${REPO_NAME}..."
             BRANCHES=$(git ls-remote --heads https://github.com/${OWNER}/${REPO_NAME}.git | sed 's|.*refs/heads/||')
-
+            
             if [[ -z "$BRANCHES" ]]; then
-              echo "⚠️ ${OWNER}/${REPO_NAME} 分支列表获取失败，请尝试重新运行工作流。"
+              echo "⚠️ Failed to fetch branch list for ${OWNER}/${REPO_NAME}, please try running the workflow again."
               return 1
             fi
             for BRANCH in $BRANCHES; do
               XML_URL="https://raw.githubusercontent.com/${OWNER}/${REPO_NAME}/${BRANCH}/${FILE}.xml"
               README_URL="https://raw.githubusercontent.com/${OWNER}/${REPO_NAME}/${BRANCH}/README.md"
-
+              
               if curl -sf --head "$XML_URL" >/dev/null; then
-                echo "✅ 在 ${OWNER}/${REPO_NAME} 找到 ${FILE}.xml (分支: ${BRANCH})"
+                echo "✅ Found ${FILE}.xml in ${OWNER}/${REPO_NAME} (branch: ${BRANCH})"
                 curl -s -o "$XML_PATH" "$XML_URL"
                 curl -s -o "$README_PATH" "$README_URL" || true
-
+                
                 FOUND_REPO="$OWNER"
                 FOUND_REPO_NAME="$REPO_NAME"
                 FOUND_BRANCH="$BRANCH"
-
+                
                 return 0
               fi
             done
@@ -276,32 +276,32 @@ jobs:
             fi
           fi
           if [[ -z "$FOUND_REPO" || ! -s "$XML_PATH" ]]; then
-            echo "❌ 无法在任何仓库中找到 ${FILE}.xml"
+            echo "❌ Could not find ${FILE}.xml in any repository"
             exit 8
           fi
           echo "MANIFEST_REPO=$FOUND_REPO" >> "$GITHUB_ENV"
           echo "MANIFEST_REPO_NAME=$FOUND_REPO_NAME" >> "$GITHUB_ENV"
           echo "MANIFEST_BRANCH=$FOUND_BRANCH" >> "$GITHUB_ENV"
-
-          # 解析 revision 字符串
+          
+          # Parse revision string
           REVISION=$(grep -oP '<project[^>]+revision="\K[^"]+' "$XML_PATH" | head -n1 || true)
-          echo "解析 FILE 获取 CPU 和 ANDROID_VERSION..."
-          # 提取 CPU
+          echo "Parsing FILE to get CPU and ANDROID_VERSION..."
+          # Extract CPU
           CPU=$(echo "$REVISION" | sed -E 's#^(oneplus|realme|oppo)/([^_]+).*#\2#')
-          # 提取 ANDROID_VERSION
+          # Extract ANDROID_VERSION
           ANDROID_VERSION=$(echo "$REVISION" | grep -oP '\d+\.\d+(\.\d+)?')
           if [[ -n "$CPU" && -n "$ANDROID_VERSION" ]]; then
             echo "✅ CPU=$CPU, ANDROID_VERSION=$ANDROID_VERSION"
             echo "CPU=$CPU" >> $GITHUB_ENV
             echo "ANDROID_VERSION=$ANDROID_VERSION" >> $GITHUB_ENV
-            # 获取短位 Android 版本号
+            # Get short Android version number
             echo "ANDROID_SHORT_VERSION=${ANDROID_VERSION%%.*}" >> $GITHUB_ENV
           else
-            echo "❌ 无法从 revision 中提取 CPU 或 ANDROID_VERSION"
+            echo "❌ Could not extract CPU or ANDROID_VERSION from revision"
             exit 1
           fi
-
-          echo "解析 README.md 获取 CPUD 和 BUILD_METHOD..."
+          
+          echo "Parsing README.md to get CPUD and BUILD_METHOD..."
           if [[ -s "$README_PATH" ]]; then
             BUILD_LINE=$(grep -m1 'oplus_build_kernel.sh' "$README_PATH" || true)
             if [[ -n "$BUILD_LINE" ]]; then
@@ -311,13 +311,13 @@ jobs:
               echo "CPUD=$CPUD" >> $GITHUB_ENV
               echo "BUILD_METHOD=$BUILD_METHOD" >> $GITHUB_ENV
             else
-              echo "❌ README.md 中未找到构建命令"
+              echo "❌ Build command not found in README.md"
             fi
           else
-            echo "❌ README.md 下载失败或为空"
+            echo "❌ README.md download failed or is empty"
           fi
-
-          # 传递组合信息
+          
+          # Pass combined information
           echo "value=${FILE_BASE}_Android${ANDROID_VERSION}" >> "$GITHUB_OUTPUT"
 
       - name: Debug Show Selected Inputs
@@ -326,7 +326,7 @@ jobs:
           SUFFIX: ${{ github.event.inputs.SUFFIX }}
         run: |
           echo "------------------------------"
-
+          
           echo "Selected CPU: ${{ env.CPU }}"
           echo "Selected CPUD: ${{ env.CPUD }}"
           echo "Selected ANDROID_VERSION: ${{ env.ANDROID_VERSION }}"
@@ -334,7 +334,7 @@ jobs:
           echo "Selected FILE: ${{ github.event.inputs.FILE }}"
           echo "Selected SUSFS_CI: ${{ github.event.inputs.SUSFS_CI }}"
           if [ "${{ github.event.inputs.SUSFS_CI }}" != "N/A" ]; then
-            echo "::warning title=SUSFS Not Required::当前管理器已自带附加模块，无需启用 SUSFS 模块，强制启用可能导致不开机。"
+            echo "::warning title=SUSFS Not Required::The current manager already includes additional modules, no need to enable the SUSFS module. Forcing it may cause boot failure."
           fi
           echo "Selected KPM: ${{ github.event.inputs.KPM }}"
           echo "Custom SUSFS_META: ${{ github.event.inputs.SUSFS_META }}"
@@ -381,7 +381,7 @@ jobs:
           repo="${{ github.repository }}"; json=$(curl -s "https://api.github.com/repos/$repo")
           parent=$(echo "$json" | grep -o '"full_name": *"[^"]*"' | head -n 2 | tail -n 1 | sed 's/.*"full_name": *"\([^"]*\)".*/\1/')
           if [ -n "$parent" ] && [ "$parent" != "Numbersf/Action-Build" ]; then
-            echo "::warning title=Source Warning::您使用的内核编译地址为非官方源，可能导致运行失败或内核异常。"
+            echo "::warning title=Source Warning::The kernel compilation address you are using is an unofficial source, which may cause run failures or kernel anomalies."
           fi
 
       - name: Reject Check
@@ -436,16 +436,16 @@ jobs:
           INIT_FLAG="${{ env.CCACHE_DIR }}/.ccache_initialized"
           if command -v ccache >/dev/null 2>&1; then
             if [ ! -f "$INIT_FLAG" ]; then
-              echo "初始化 ccache (${{ env.CCACHE_DIR }})..."
+              echo "Initializing ccache (${{ env.CCACHE_DIR }})..."
               mkdir -p "${{ env.CCACHE_DIR }}"
               ccache -M ${{ env.CCACHE_MAXSIZE }}
               touch "$INIT_FLAG"
-              echo "✅ ccache 初始化完成"
+              echo "✅ ccache initialization completed"
             else
-              echo "✅ ccache 已初始化，跳过"
+              echo "✅ ccache already initialized, skipping"
             fi
           else
-            echo "❌ 未安装 ccache，跳过"
+            echo "❌ ccache not installed, skipping"
           fi
           ccache -s
 
@@ -463,32 +463,32 @@ jobs:
           mkdir -p .repo/manifests
           cp "$GITHUB_WORKSPACE/.repo/manifests_fallback/${FILE}.xml" ".repo/manifests/${FILE}.xml"
           BASE_URL="https://github.com/${MANIFEST_REPO}/${MANIFEST_REPO_NAME}.git"
-
-          echo "使用$MANIFEST_REPO/$MANIFEST_REPO_NAME($MANIFEST_BRANCH)初始化仓库..."
+          
+          echo "Initializing repository using $MANIFEST_REPO/$MANIFEST_REPO_NAME($MANIFEST_BRANCH)..."
           repo init -u "$BASE_URL" -b "$MANIFEST_BRANCH" -m "${FILE}.xml" --depth=1 --no-clone-bundle --no-tags
           sed -i -e '/prebuilts\/asuite"/{/ks-kernel\.lnx\.5\.0\.r3-rel/d}' -e '/tools\/tradefederation\/prebuilts"/{/ks-kernel\.lnx\.5\.0\.r3-rel/d}' ".repo/manifests/${FILE}.xml"
           repo sync -c -j$(nproc) --no-clone-bundle --no-tags --force-sync
-
+          
           KERNEL_REPOS=""
           KERNEL_REPOS_PATH=$(find . -type f -name "build.config.msm.common" | head -n 1)
           if [[ -n "$KERNEL_REPOS_PATH" ]]; then
             KERNEL_REPOS=$(echo "${KERNEL_REPOS_PATH#./}" | cut -d/ -f2)
-            echo "✅ 发现 build.config.msm.common: $KERNEL_REPOS_PATH"
+            echo "✅ Found build.config.msm.common: $KERNEL_REPOS_PATH"
             echo "✅ KERNEL_REPOS=$KERNEL_REPOS"
             echo "KERNEL_REPOS=$KERNEL_REPOS" >> "$GITHUB_ENV"
           else
-            echo "❎ 未找到 build.config.msm.common，可能是天玑清单或纯 Kleaf 构建结构"
+            echo "❎ build.config.msm.common not found, it might be a Dimensity manifest or pure Kleaf build structure"
           fi
-
-          # 移除 ABI 保护
+          
+          # Remove ABI protection
           for dir in kernel_platform/common kernel_platform/$KERNEL_REPOS; do
             if [ -e "$dir/BUILD.bazel" ]; then
               sed -i '/^[[:space:]]*"protected_exports_list"[[:space:]]*:[[:space:]]*"android\/abi_gki_protected_exports_aarch64",$/d' "$dir/BUILD.bazel"
             fi
             rm -f "$dir/android/abi_gki_protected_exports_"* 2>/dev/null || echo "No protected exports in $dir"
           done
-
-          # 移除构建审查
+          
+          # Remove build review
           if grep -q 'check_defconfig' kernel_platform/common/build.config.gki; then
             sed -i 's/check_defconfig//' kernel_platform/common/build.config.gki
           fi
@@ -500,7 +500,7 @@ jobs:
       - name: Kernel Version Handling
         run: |
           cd kernel_workspace/kernel_platform
-          # 获取内核 Android 版本号(KANDROID_VERSION)以及内核版本号(KERNEL_VERSION 2位)
+          # Get kernel Android version (KANDROID_VERSION) and kernel version (KERNEL_VERSION 2 digits)
           for f in ./common/build.config.constants ./common/build.config.common; do
             if [ -f "$f" ]; then
               KMI=$(grep -m1 '^BRANCH=' "$f" | cut -d= -f2)
@@ -517,30 +517,30 @@ jobs:
           else
             echo "No KMI found in build.config* and ACK_SHA files"
           fi
-
-          # 从 Makefile 获取完整内核版本号 (CD) 并拆分
+          
+          # Get full kernel version (CD) from Makefile and split
           VERSIONLEVEL=$(awk '/^VERSION =/ {print $3}' ./common/Makefile)
           PATCHLEVEL=$(awk '/^PATCHLEVEL =/ {print $3}' ./common/Makefile)
           SUBLEVEL=$(awk '/^SUBLEVEL =/ {print $3}' ./common/Makefile)
           echo "VERSIONLEVEL=$VERSIONLEVEL" >> $GITHUB_ENV
           echo "PATCHLEVEL=$PATCHLEVEL" >> $GITHUB_ENV
-          # SUBLEVEL 仅传递修改前的值，因为伪装并不影响原源码状态
+          # SUBLEVEL only passes the value before modification, because spoofing does not affect the original source state
           echo "SUBLEVEL=$SUBLEVEL" >> $GITHUB_ENV
           ORIG_VERSION=$(awk '/^VERSION =/ {v=$3} /^PATCHLEVEL =/ {p=$3} /^SUBLEVEL =/ {s=$3} END {print v"."p"."s}' ./common/Makefile)
-
-          # 强制修改 SUBLEVEL (内核等级)
+          
+          # Force modify SUBLEVEL (kernel level)
           RESUBLEVEL="${{ github.event.inputs.RESUBLEVEL }}"
           if [ -n "$RESUBLEVEL" ]; then
-            echo "修改 SUBLEVEL 为 $RESUBLEVEL"
+            echo "Modifying SUBLEVEL to $RESUBLEVEL"
             sed -i "s/^SUBLEVEL[[:space:]]*=[[:space:]]*.*/SUBLEVEL = $RESUBLEVEL/" ./common/Makefile
           else
-            echo "未指定 SUBLEVEL，保持默认"
+            echo "SUBLEVEL not specified, keeping default"
           fi
-
-          # 读取修改后的版本
+          
+          # Read modified version
           NEW_VERSION=$(awk '/^VERSION =/ {v=$3} /^PATCHLEVEL =/ {p=$3} /^SUBLEVEL =/ {s=$3} END {print v"."p"."s}' ./common/Makefile)
-          # CKERNEL_VERSION(3位)：被修改之后或者未经过修改的完整内核版本号，用于欺骗系统
-          # DKERNEL_VERSION(3位)：被修改之前的完整内核版本号，真实值
+          # CKERNEL_VERSION (3 digits): Full kernel version after modification or unmodified, used to spoof the system
+          # DKERNEL_VERSION (3 digits): Full kernel version before modification, real value
           if [ "$ORIG_VERSION" != "$NEW_VERSION" ]; then
             echo "Kernel Version:$ORIG_VERSION->$NEW_VERSION"
             echo "CKERNEL_VERSION=$NEW_VERSION" >> $GITHUB_ENV
@@ -549,49 +549,49 @@ jobs:
             echo "Kernel Version:$ORIG_VERSION No changes"
             echo "CKERNEL_VERSION=$ORIG_VERSION" >> $GITHUB_ENV
           fi
-
-          # 内核版本的数字转换，仅前两位不包含 SUBLEVEL
+          
+          # Numeric conversion of kernel version, only the first two digits do not include SUBLEVEL
           echo "KERNEL_SHORT_PATCH_VERSION=$(echo $NEW_VERSION | cut -d. -f1,2 | tr '.' '_')" >> $GITHUB_ENV
 
       - name: Rust Version Handling
         run: |
           cd kernel_workspace/kernel_platform
-          # 从 build.config.constants 读取 RUSTC_VERSION
+          # Read RUSTC_VERSION from build.config.constants
           RUSTC_VERSION=""
           if [[ -f ./common/build.config.constants ]]; then
             RUSTC_VERSION=$(grep '^RUSTC_VERSION=' ./common/build.config.constants | cut -d'=' -f2 || true)
           fi
           if [[ -n "$RUSTC_VERSION" ]]; then
-            echo "✅ RUSTC_VERSION(原始)=$RUSTC_VERSION"
+            echo "✅ RUSTC_VERSION (original)=$RUSTC_VERSION"
             RUSTC_DIR_VERSION=$(echo "$RUSTC_VERSION" | grep -oE '^[0-9]+\.[0-9]+\.[0-9]+')
             if [[ -z "$RUSTC_DIR_VERSION" ]]; then
               RUSTC_DIR_VERSION="$RUSTC_VERSION"
             fi
-            echo "✅ RUSTC_DIR_VERSION(用于目录匹配)=$RUSTC_DIR_VERSION"
+            echo "✅ RUSTC_DIR_VERSION (for directory matching)=$RUSTC_DIR_VERSION"
             echo "RUSTC_VERSION=$RUSTC_VERSION" >> $GITHUB_ENV
             echo "RUSTC_DIR_VERSION=$RUSTC_DIR_VERSION" >> $GITHUB_ENV
             echo "ENABLE_RUST=true" >> $GITHUB_ENV
           else
-            echo "✅ RUSTC_VERSION 未找到，Rust 编译已禁用"
+            echo "✅ RUSTC_VERSION not found, Rust compilation disabled"
             echo "ENABLE_RUST=false" >> $GITHUB_ENV
           fi
 
-      # 自定义内核后缀
+      # Custom kernel suffix
       - name: Custom Kernel Suffix if set
         if: ${{ github.event.inputs.SUFFIX != '' && github.event.inputs.SUFFIX != '-1' }}
         run: |
           cd kernel_workspace/kernel_platform
           SUFFIX="${{ github.event.inputs.SUFFIX }}"
           FAST_BUILD="${{ github.event.inputs.FAST_BUILD }}"
-
+          
           for f in ./common/scripts/setlocalversion ./"$KERNEL_REPOS"/scripts/setlocalversion ./external/dtc/scripts/setlocalversion; do
             [ -f "$f" ] || continue
             echo "Modifying: $f"
-
+            
             # Remove -dirty
             sed -i 's/ -dirty//g' "$f"
             sed -i '$i res=$(echo "$res" | sed '\''s/-dirty//g'\'')' "$f"
-
+            
             if grep -q 'KERNELVERSION.*scm_version' "$f"; then
               echo "Detected NEW setlocalversion format"
               sed -i "s|echo \"\${KERNELVERSION}.*scm_version}\"|echo \"\${KERNELVERSION}-${KANDROID_VERSION}-${SUFFIX}\"|" "$f"
@@ -603,7 +603,6 @@ jobs:
               else
                 echo "Standard build: injecting suffix via cut/echo"
                 if [[ -f ./build_with_bazel.py ]]; then
-                  echo "使用官方脚本编译且当使用 build_with_bazel 时，可能受特殊符号数量限制，编译失败请修改"
                   echo "When using the official script and building with build_with_bazel, the build may fail due to a limit on the number of special characters. Please modify the configuration if that happens."
                 fi
                 tac "$f" | sed "0,/echo \"\\\$res\"/s//res=\\\$(echo \\\$res | cut -d- -f1-2)-${SUFFIX}; echo \"\\\$res\";/" | tac > "$f.tmp" && mv "$f.tmp" "$f"
@@ -615,26 +614,26 @@ jobs:
             chmod +x "$f"
           done
 
-      # 伪官方格式的随机后缀（仅在 SUFFIX 未设置时生效）*
+      # Random suffix in pseudo-official format (only effective when SUFFIX is not set)*
       - name: Custom Kernel Random Suffix if empty
         if: ${{ github.event.inputs.SUFFIX == '' }}
         run: |
           cd kernel_workspace/kernel_platform
           FAST_BUILD="${{ github.event.inputs.FAST_BUILD }}"
-
-          # 生成随机数字和随机hash
+          
+          # Generate random number and random hash
           RANDOM_DIGIT=$(od -An -N1 -tu1 < /dev/urandom | tr -d '[:space:]' | awk '{print $1 % 11}')
           RANDOM_HASH=$(od -An -N7 -tx1 /dev/urandom | tr -d ' \n')
           RANDOM_SUFFIX="${RANDOM_DIGIT}-o-g${RANDOM_HASH}"
-
+          
           for f in ./common/scripts/setlocalversion ./"$KERNEL_REPOS"/scripts/setlocalversion ./external/dtc/scripts/setlocalversion; do
             [ -f "$f" ] || continue
             echo "Modifying: $f"
-
+            
             # Remove -dirty
             sed -i 's/ -dirty//g' "$f"
             sed -i '$i res=$(echo "$res" | sed '\''s/-dirty//g'\'')' "$f"
-
+            
             if grep -q 'KERNELVERSION.*scm_version' "$f"; then
               echo "Detected NEW setlocalversion format"
               sed -i "s|echo \"\${KERNELVERSION}.*scm_version}\"|echo \"\${KERNELVERSION}-${KANDROID_VERSION}-${RANDOM_SUFFIX}\"|" "$f"
@@ -659,23 +658,23 @@ jobs:
           cd kernel_workspace/kernel_platform
           KSU_META="${{ github.event.inputs.KSU_META }}"
           FAST_BUILD="${{ github.event.inputs.FAST_BUILD }}"
-
-          # 必须包含两个分隔符（至少四个字段）
+          
+          # Must contain two separators (at least four fields)
           if [[ "$(grep -o '/' <<< "$KSU_META" | wc -l)" -lt 3 ]]; then
-            echo "错误: KSU_META 参数缺少必要的分隔符 '/'，格式应为: 管理器分支名/内置分支名/自定义标识(可省略)/提交hash(可省略)"
+            echo "Error: KSU_META parameter is missing the necessary separator '/', format should be: Manager branch name/Builtin branch name/Custom identifier (optional)/Commit hash (optional)"
             exit 10
           fi
-
-          # 解析字段：分支 / 自定义标识 / 手动 hash
+          
+          # Parse fields: branch / custom identifier / manual hash
           IFS='/' read -r KSU_MANAGER_BRANCH KSU_BUILTIN_BRANCH KSU_CUSTOM_TAG MANUAL_HASH <<< "$KSU_META"
           echo "KSU_MANAGER_BRANCH=$KSU_MANAGER_BRANCH" >> $GITHUB_ENV
           echo "KSU_BUILTIN_BRANCH=$KSU_BUILTIN_BRANCH" >> $GITHUB_ENV
-          [[ -n "$KSU_CUSTOM_TAG" ]] && echo "自定义版本标识: $KSU_CUSTOM_TAG" || echo "自定义版本标识: 未启用"
-          [[ -n "$MANUAL_HASH" ]] && echo "手动指定 hash: $MANUAL_HASH" || echo "手动指定 hash: 未启用"
-
+          [[ -n "$KSU_CUSTOM_TAG" ]] && echo "Custom version identifier: $KSU_CUSTOM_TAG" || echo "Custom version identifier: Not enabled"
+          [[ -n "$MANUAL_HASH" ]] && echo "Manually specified hash: $MANUAL_HASH" || echo "Manually specified hash: Not enabled"
+          
           curl -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/${KSU_MANAGER_BRANCH}/kernel/setup.sh" | bash -s "$KSU_BUILTIN_BRANCH"
           cd ./KernelSU
-
+          
           if [[ -n "$KSU_CUSTOM_TAG" ]]; then
             echo "KSU_CUSTOM_TAG=$KSU_CUSTOM_TAG" >> "$GITHUB_ENV"
           fi
@@ -683,7 +682,7 @@ jobs:
             git fetch origin "$KSU_BUILTIN_BRANCH" --depth=50
             git checkout "$MANUAL_HASH"
           fi
-
+          
           KSU_VERSION=$(expr $(git rev-list --count "$KSU_MANAGER_BRANCH" 2>/dev/null || echo 13000) + 30700)
           echo "KSUVER=$KSU_VERSION" >> $GITHUB_ENV
           if [ "$FAST_BUILD" = "false" ]; then
@@ -715,7 +714,7 @@ jobs:
                 git checkout "$SUSFS_META"
               fi
             else
-              echo "SUSFS_META 为空，使用最新上游 SUSFS"
+              echo "SUSFS_META is empty, using latest upstream SUSFS"
             fi
             cd ..
           fi
@@ -728,33 +727,33 @@ jobs:
           git clone https://github.com/ShirkNeko/SukiSU_patch.git
           cd kernel_platform
           if [ "${{ github.event.inputs.SUSFS_META }}" != "-1" ]; then
-            echo "正在拉取susfs补丁"
+            echo "Pulling susfs patch"
             cp ../susfs4ksu/kernel_patches/50_add_susfs_in_gki-${{ env.KANDROID_VERSION }}-${{ env.KERNEL_VERSION }}.patch ./common/
             cp ../susfs4ksu/kernel_patches/fs/* ./common/fs/
             cp ../susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
           fi
-
+          
           if [[ "${{ github.event.inputs.ZRAM }}" == 1* ]]; then
-            echo "正在拉取zram补丁"
+            echo "Pulling zram patch"
             cp -r ../SukiSU_patch/other/zram/lz4k/include/linux/* ./common/include/linux/
             cp -r ../SukiSU_patch/other/zram/lz4k/lib/* ./common/lib/
             cp -r ../SukiSU_patch/other/zram/lz4k/crypto/* ./common/crypto/
             cp -r ../SukiSU_patch/other/zram/lz4k_oplus ./common/lib/
           fi
-
+          
           cd ./common
-
+          
           if [ "$KMI" == "android13-5.15" ] && [ "$SUBLEVEL" -lt 123 ]; then
-            echo "修复内核版本为5.15.0~5.15.123仅支持旧版C库造成的一些bug"
+            echo "Fixing some bugs caused by kernel version 5.15.0~5.15.123 only supporting old C libraries"
             cp "${GITHUB_WORKSPACE}/kernel_workspace/Action-Build/patches/fix_5.15.legacy" ./fix_5.15.legacy.patch
             patch -p1 < fix_5.15.legacy.patch
-            echo "fix_5.15_patch完成"
+            echo "fix_5.15_patch completed"
           fi
-
+          
           if [ "${{ github.event.inputs.SUSFS_META }}" != "-1" ]; then
-            echo "正在打susfs补丁"
+            echo "Applying susfs patch"
             patch -p1 < 50_add_susfs_in_gki-${{ env.KANDROID_VERSION }}-${{ env.KERNEL_VERSION }}.patch || true
-            echo "susfs_patch完成"
+            echo "susfs_patch completed"
           fi
           source $REJ_CHECKER
           check_rejects .
@@ -765,7 +764,7 @@ jobs:
           kotlin "$GITHUB_WORKSPACE/kernel_workspace/Action-Build/scripts/PatchFakePatches.kts" postfix "$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/common"
           kotlin "$GITHUB_WORKSPACE/kernel_workspace/Action-Build/scripts/PatchFakePatches.kts" revert "$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/common"
 
-      # OGKI转换GKI，无需修改 dtbo 开机
+      # OGKI to GKI conversion, no need to modify dtbo boot
       - name: Apply Convert HMBIRD_OGKI to HMBIRD_GKI
         if: ${{ (fromJSON(env.VERSIONLEVEL) > 6 || (fromJSON(env.VERSIONLEVEL) == 6 && fromJSON(env.PATCHLEVEL) >= 6)) && github.event.inputs.SCHED_HMBIRD == 'false' }}
         run: |
@@ -773,14 +772,14 @@ jobs:
           cd kernel_workspace/kernel_platform/common
           for p in ./kernel/sched/hmbird* ./vendor/oplus/kernel/cpu/sched_ext/hmbird*; do
             [ -d "$p" ] && {
-              echo "源码中风驰代码已经存在，启用二次回退"
+              echo "Fengchi code already exists in the source, enabling secondary fallback"
               exit 0
             }
           done
           sed -i '1iobj-y += hmbird_patch.o' drivers/Makefile
-          echo "正在打OGKI转换GKI补丁"
+          echo "Applying OGKI to GKI conversion patch"
           patch -p1 -F 3 < "${PATCH_DIR}/hmbird_patch.patch" || true
-          echo "OGKI转换GKI_patch完成"
+          echo "OGKI to GKI_patch completed"
           source $REJ_CHECKER
           check_rejects .
 
@@ -832,40 +831,40 @@ jobs:
         run: |
           PATCH_DIR="${GITHUB_WORKSPACE}/kernel_workspace/Action-Build/patches"
           cd kernel_workspace/kernel_platform/common
-          # 注释掉原始的 sysv 结构体定义
+          # Comment out original sysv struct definitions
           sed -i 's/^\(\t\)struct sysv_sem\b.*sysvsem;/\1\/\/ struct sysv_sem\t\t\tsysvsem;/' include/linux/sched.h
           sed -i 's/^\(\t\)struct sysv_shm\b.*sysvshm;/\1\/\/ struct sysv_shm\t\t\tsysvshm;/' include/linux/sched.h
-
+          
           if [ "$KMI" = "android12-5.10" ]; then
-            echo "为 android12-5.10 修复 sysvipc KABI 绕过及 POSIX_MQUEUE ABI 填充问题..."
+            echo "Fixing sysvipc KABI bypass and POSIX_MQUEUE ABI padding issues for android12-5.10..."
             sed -i '/^\tconst struct sched_class\t\*sched_class;/a \\n#ifndef __GENKSYMS__\n\tstruct sysv_sem\t\t\tsysvsem;\n\tstruct sysv_shm\t\t\tsysvshm;\n#endif\n' include/linux/sched.h
             sed -i 's/^\tunsigned long mq_bytes;\t\/\* How many bytes can be allocated to mqueue[?] \*\//\t\/\/unsigned long mq_bytes;\t\/* How many bytes can be allocated to mqueue? *\//' include/linux/sched/user.h
             sed -i '/struct ratelimit_state ratelimit;/,/ANDROID_OEM_DATA_ARRAY(1, 2);/{/^\tANDROID_KABI_RESERVE(1);/{N;N;s/^\tANDROID_KABI_RESERVE(1);\n\tANDROID_KABI_RESERVE(2);\n\tANDROID_OEM_DATA_ARRAY(1, 2);/#if defined(CONFIG_POSIX_MQUEUE)\n\tANDROID_KABI_USE(1, unsigned long mq_bytes);\n\tANDROID_KABI_RESERVE(2);\n\tANDROID_OEM_DATA_ARRAY(1, 2);\n#else\n\tANDROID_KABI_RESERVE(1);\n\tANDROID_KABI_RESERVE(2);\n\tANDROID_OEM_DATA_ARRAY(1, 2);\n#endif/}}' include/linux/sched/user.h
-          # 检查 sched.h 并修改 KABI 槽位或指针
+          # Check sched.h and modify KABI slots or pointers
           elif grep -q "sched_dl_entity.*\*dl_server" include/linux/sched.h; then
-            echo "✅ 检测到 dl_server 指针，使用 packed union 方案"
+            echo "✅ Detected dl_server pointer, using packed union scheme"
             sed -i 's|\tstruct sched_entity\t\tse;|#ifdef CONFIG_SYSVIPC\n\tunion {\n\t\tchar __kabi_ignored_0;\n\t\tstruct sysv_sem\t\t\tsysvsem;\n\t}__attribute__((packed));\n\tunion {\n\t\tchar __kabi_ignored_1;\n\t\tstruct sysv_shm\t\t\tsysvshm;\n\t}__attribute__((packed));\n#endif\n\n\tstruct sched_entity\t\tse;|' include/linux/sched.h
-          elif grep -q "ANDROID_KABI_USE(1," include/linux/sched.h; then
-            echo "✅ 检测到 USE(1)，使用槽位 6,7,8"
+          elif grep -q "ANDROID_KABI_USE(1," include/linux/sched.h; then 
+            echo "✅ Detected USE(1), using slots 6,7,8"
             sed -i -e '/ANDROID_KABI_RESERVE(6);/{N;N;s|\tANDROID_KABI_RESERVE(6);\n\tANDROID_KABI_RESERVE(7);\n\tANDROID_KABI_RESERVE(8);|#ifdef CONFIG_SYSVIPC\n\tANDROID_KABI_USE(6, struct sysv_sem sysvsem);\n\t_ANDROID_KABI_REPLACE(ANDROID_KABI_RESERVE(7); ANDROID_KABI_RESERVE(8), struct sysv_shm sysvshm);\n#else\n\tANDROID_KABI_RESERVE(6);\n\tANDROID_KABI_RESERVE(7);\n\tANDROID_KABI_RESERVE(8);\n#endif|;}' include/linux/sched.h
           elif grep -q "ANDROID_KABI_RESERVE(1);" include/linux/sched.h; then
-            echo "✅ 检测到 RESERVE(1)，使用槽位 1,2,3"
+            echo "✅ Detected RESERVE(1), using slots 1,2,3"
             sed -i -e '/ANDROID_KABI_RESERVE(1);/{N;N;N;N;N;N;N;s|\tANDROID_KABI_RESERVE(1);\n\tANDROID_KABI_RESERVE(2);\n\tANDROID_KABI_RESERVE(3);\n\tANDROID_KABI_RESERVE(4);\n\tANDROID_KABI_RESERVE(5);\n\tANDROID_KABI_RESERVE(6);\n\tANDROID_KABI_RESERVE(7);\n\tANDROID_KABI_RESERVE(8);|#ifdef CONFIG_SYSVIPC\n\tANDROID_KABI_USE(1, struct sysv_sem sysvsem);\n\t_ANDROID_KABI_REPLACE(ANDROID_KABI_RESERVE(2); ANDROID_KABI_RESERVE(3), struct sysv_shm sysvshm);\n#else\n\tANDROID_KABI_RESERVE(1);\n\tANDROID_KABI_RESERVE(2);\n\tANDROID_KABI_RESERVE(3);\n#endif\n\tANDROID_KABI_RESERVE(4);\n\tANDROID_KABI_RESERVE(5);\n\tANDROID_KABI_RESERVE(6);\n\tANDROID_KABI_RESERVE(7);\n\tANDROID_KABI_RESERVE(8);|;}' include/linux/sched.h
           elif grep -q "ANDROID_KABI_RESERVE(3);" include/linux/sched.h; then
-            echo "✅ fallback，使用槽位 3,4,5"
+            echo "✅ fallback, using slots 3,4,5"
             sed -i -e '/ANDROID_KABI_RESERVE(3);/{N;N;N;s|\tANDROID_KABI_RESERVE(3);\n\tANDROID_KABI_RESERVE(4);\n\tANDROID_KABI_RESERVE(5);\n\tANDROID_KABI_RESERVE(6);|#ifdef CONFIG_SYSVIPC\n\tANDROID_KABI_USE(3, struct sysv_sem sysvsem);\n\t_ANDROID_KABI_REPLACE(ANDROID_KABI_RESERVE(4); ANDROID_KABI_RESERVE(5), struct sysv_shm sysvshm);\n#else\n\tANDROID_KABI_RESERVE(3);\n\tANDROID_KABI_RESERVE(4);\n\tANDROID_KABI_RESERVE(5);\n#endif\n\tANDROID_KABI_RESERVE(6);|;}' include/linux/sched.h
           else
-            echo "❌ 无法通过上下文精准匹配 KABI 槽位或对应指针"
+            echo "❌ Could not precisely match KABI slots or corresponding pointers through context"
             exit 9
           fi
-
-          echo "为 oplus_bsp_midas 模块返回幽灵任务以避免空指针崩溃..."
+          
+          echo "Returning ghost tasks for oplus_bsp_midas module to avoid null pointer crashes..."
           patch -p1 --forward < "${PATCH_DIR}/ghost-task-for-midas.patch" || true
-
+          
           if [ "$KMI" = "android16-6.12" ]; then
             rm -f include/uapi/linux/ntsync.h
             rm -f drivers/misc/ntsync.c
-            echo "补全 IPC NS 符号导出..."
+            echo "Completing IPC NS symbol exports..."
             if ! grep -q 'EXPORT_SYMBOL.*put_ipc_ns' ./ipc/namespace.c; then
               echo -e '\nEXPORT_SYMBOL_GPL(put_ipc_ns);' >> ./ipc/namespace.c
             fi
@@ -873,7 +872,7 @@ jobs:
               echo -e '\nEXPORT_SYMBOL_GPL(init_ipc_ns);' >> ./ipc/msgutil.c
             fi
           fi
-          echo "拓展 ntsync 支持..."
+          echo "Extending ntsync support..."
           patch -p1 --forward < "${PATCH_DIR}/ntsync/ntsync_base.patch" || true
           if [[ "$FILE" == oneplus_10r* ]]; then
             patch -p1 --forward < "${PATCH_DIR}/ntsync/ntsync_compat_android12-5.10_14.patch" || true
@@ -896,26 +895,26 @@ jobs:
         run: |
           ZRAM="${{ github.event.inputs.ZRAM }}"
           if [[ "$(grep -o '/' <<< "$ZRAM" | wc -l)" -lt 2 ]]; then
-            echo "错误: ZRAM 参数缺少必要的分隔符 '/'，格式应为: 总开关0关1开/算法名(前面输入0时无效)/大小(前面输入0时无效)"
+            echo "Error: ZRAM parameter is missing the necessary separator '/', format should be: Master switch 0 off 1 on/Algorithm name (invalid if 0 is entered before)/Size (invalid if 0 is entered before)"
             exit 10
           fi
-          # 解析字段：开关状态 / 算法名 / 大小
+          # Parse fields: switch status / algorithm name / size
           IFS='/' read -r ZRAM_SWSTA ZRAM_ALGO ZRAM_SIZE <<< "$ZRAM"
           echo "ZRAM_ALGO=$ZRAM_ALGO" >> $GITHUB_ENV
           echo "ZRAM_ALGO_U=${ZRAM_ALGO^^}" >> $GITHUB_ENV
           echo "ZRAM_SIZE=$ZRAM_SIZE" >> $GITHUB_ENV
-
+          
           PATCH_DIR="${GITHUB_WORKSPACE}/kernel_workspace/SukiSU_patch/other/zram/zram_patch/${{ env.KERNEL_VERSION }}"
           cd kernel_workspace/kernel_platform/common
           if [[ "$KERNEL_VERSION" == "5.10" && "${CPU}" == mt* ]]; then
             sed -i 's/select CRYPTO_LZO/depends on CRYPTO_LZO/' ./mm/oplus_mm/hybridswap_zram/Kconfig
           fi
-          echo "正在打lz4kd补丁"
+          echo "Applying lz4kd patch"
           patch -p1 -F 3 < "${PATCH_DIR}/lz4kd.patch" || true
-          echo 'lz4kd_patch完成'
-          echo "正在打lz4k_oplus补丁"
+          echo 'lz4kd_patch completed'
+          echo "Applying lz4k_oplus patch"
           patch -p1 -F 3 < "${PATCH_DIR}/lz4k_oplus.patch" || true
-          echo 'lz4k_oplus_patch完成'
+          echo 'lz4k_oplus_patch completed'
           source $REJ_CHECKER
           check_rejects .
 
@@ -928,22 +927,22 @@ jobs:
           CLEAN_FILE="${FILE//_bak/}"
           for p in ./kernel/sched/hmbird* ./vendor/oplus/kernel/cpu/sched_ext/hmbird*; do
             [ -d "$p" ] && {
-              echo "源码中风驰代码已经存在，启用二次回退"
+              echo "Fengchi code already exists in the source, enabling secondary fallback"
               exit 0
             }
           done
-          git clone https://github.com/Numbersf/SCHED_PATCH.git -b $CPU || { echo "❌ CPU 分支不存在，风驰内核暂未支持你的机型，请关闭后重试"; exit 11; }
-          echo "正在拉取风驰补丁"
+          git clone https://github.com/Numbersf/SCHED_PATCH.git -b $CPU || { echo "❌ CPU branch does not exist, Fengchi kernel does not support your model yet, please turn it off and retry"; exit 11; }
+          echo "Pulling Fengchi patch"
           cp ./SCHED_PATCH/fengchi_${CLEAN_FILE}.patch ./
           if [[ -f "fengchi_${CLEAN_FILE}.patch" ]]; then
-            echo "正在打风驰补丁"
+            echo "Applying Fengchi patch"
             dos2unix "fengchi_${CLEAN_FILE}.patch"
             patch -p1 -F 3 < "fengchi_${CLEAN_FILE}.patch"
-            echo "fengchi_patch完成"
+            echo "fengchi_patch completed"
             source $REJ_CHECKER
             check_rejects .
           else
-            echo "❌ 未匹配到补丁，风驰内核暂未支持你的机型，请关闭后重试"
+            echo "❌ Patch not matched, Fengchi kernel does not support your model yet, please turn it off and retry"
             exit 12
           fi
 
@@ -951,19 +950,19 @@ jobs:
         if: ${{ github.event.inputs.LSM_BBG == 'true' }}
         run: |
           cd kernel_workspace/kernel_platform/common
-          echo "正在启用内核级基带保护支持…"
+          echo "Enabling kernel-level baseband protection support…"
           curl -LSs https://raw.githubusercontent.com/vc-teahouse/Baseband-guard/main/setup.sh | bash
           sed -i '/^config LSM$/,/^help$/{ /^[[:space:]]*default/ { /baseband_guard/! s/selinux/selinux,baseband_guard/ } }' ./security/Kconfig
 
-      # 配置信息，带*为附加项目，具有一定危险性和不确定性
+      # Configuration information, items marked with * are additional items, with certain risks and uncertainties
       - name: Add Configuration Settings
         run: |
           cd kernel_workspace/kernel_platform/common
           CONFIG_FILE=./arch/arm64/configs/gki_defconfig
           MAKEFILE=./kernel/Makefile
-
+          
           declare -a HIDE_CONFIGS=()
-
+          
           set_config() {
             local val="$1"
             local key="${val%%=*}"
@@ -976,14 +975,14 @@ jobs:
               printf '%s\n' "$val" >> "$CONFIG_FILE"
             fi
           }
-
+          
           set_hide_config() {
             local val="$1"
             local key="${val%%=*}"
             set_config "$val"
             HIDE_CONFIGS+=("$key")
           }
-
+          
           inject_fake_config() {
             [ "${#HIDE_CONFIGS[@]}" -eq 0 ] && return 0
             local marker="# --- fake_config injector ---"
@@ -999,24 +998,24 @@ jobs:
             echo "CONFIG_FAKE_DISABLE=${HIDE_CONFIGS[*]}" >> "$GITHUB_ENV"
           }
           trap 'inject_fake_config' EXIT
-
-          # ReSukiSU配置
+          
+          # ReSukiSU configuration
           set_config "CONFIG_KSU=y"
           set_config "CONFIG_KSU_MULTI_MANAGER_SUPPORT=y"
           set_config "CONFIG_KSU_TOOLKIT_SUPPORT=y"
           if [[ -n "$KSU_CUSTOM_TAG" ]]; then
             set_config "CONFIG_KSU_FULL_NAME_FORMAT=\"%TAG_NAME%-${KSU_CUSTOM_TAG}@${KSU_BUILTIN_BRANCH}[%COMMIT_SHA%]\""
           fi
-
-          # KPM配置
+          
+          # KPM configuration
           if [ "${{ github.event.inputs.KPM }}" = "KPM" ] || [ "${{ github.event.inputs.KPM }}" = "N/A" ]; then
             set_config "CONFIG_KPM=y"
           fi
           if [ "${{ github.event.inputs.KPM }}" = "KPN" ]; then
             set_config "CONFIG_KPM=n"
           fi
-
-          # SUSFS配置
+          
+          # SUSFS configuration
           if [ "${{ github.event.inputs.SUSFS_META }}" != "-1" ]; then
             set_config "CONFIG_KSU_SUSFS=y"
             set_config "CONFIG_KSU_SUSFS_SUS_PATH=y"
@@ -1031,12 +1030,12 @@ jobs:
           else
             set_config "CONFIG_KSU_SUSFS=n"
           fi
-
-          # TMPFS配置*
+          
+          # TMPFS configuration*
           set_config "CONFIG_TMPFS_XATTR=y"
           set_config "CONFIG_TMPFS_POSIX_ACL=y"
-
-          # BBR & ECN配置*
+          
+          # BBR & ECN configuration*
           if [ "${{ github.event.inputs.CCM }}" = "true" ]; then
             set_hide_config "CONFIG_TCP_CONG_ADVANCED=y"
             set_config "CONFIG_TCP_CONG_BBR=y"
@@ -1052,14 +1051,14 @@ jobs:
             set_config "CONFIG_IPV6_ECN=y"
             set_config "CONFIG_IP_NF_TARGET_ECN=y"
           fi
-
-          # Re-Kernel配置*
+          
+          # Re-Kernel configuration*
           if [ "${{ github.event.inputs.RE_KERNEL }}" = "true" ]; then
             set_config "CONFIG_REKERNEL=y"
             set_config "CONFIG_REKERNEL_NETWORK=y"
           fi
-
-          # ZRAM配置*
+          
+          # ZRAM configuration*
           if [[ "${{ github.event.inputs.ZRAM }}" == 1* ]]; then
             set_config "CONFIG_CRYPTO_LZ4HC=y"
             set_config "CONFIG_CRYPTO_LZ4K=y"
@@ -1068,13 +1067,13 @@ jobs:
             set_config "CONFIG_CRYPTO_LZ4K_OPLUS=y"
             set_config "CONFIG_ZRAM_WRITEBACK=y"
           fi
-
-          # LSM配置*
+          
+          # LSM configuration*
           if [ "${{ github.event.inputs.LSM_BBG }}" = "true" ]; then
             set_config "CONFIG_BBG=y"
           fi
-
-          # DROID_SPACES配置*
+          
+          # DROID_SPACES configuration*
           if [ "${{ github.event.inputs.DROID_SPACES }}" = "true" ]; then
             set_config "CONFIG_NTSYNC=y"
             set_config "CONFIG_SYSVIPC=y"
@@ -1088,8 +1087,8 @@ jobs:
             set_config "CONFIG_NETFILTER_XT_TARGET_LOG=y"
             set_config "CONFIG_NETFILTER_XT_MATCH_RECENT=y"
           fi
-
-          # IPSET & IPv6_NAT & TTL配置*
+          
+          # IPSET & IPv6_NAT & TTL configuration*
           if [ "${{ github.event.inputs.NETFILTER }}" = "true" ]; then
             if [[ "$KERNEL_VERSION" != "6.12" && "${CPU}" != mt* ]]; then
               set_config "CONFIG_BPF_STREAM_PARSER=y"
@@ -1125,8 +1124,8 @@ jobs:
             set_config "CONFIG_IP_NF_MANGLE=y"
             set_config "CONFIG_IP6_NF_MANGLE=y"
           fi
-
-          # 构建依赖项调整及优化
+          
+          # Build dependency adjustments and optimizations
           if [ "$KERNEL_VERSION" = "5.15" ] && [[ "$CPU" == mt* ]]; then
             set_config "CONFIG_OPLUS_SYSTEM_KERNEL=y"
             set_config "CONFIG_OPLUS_FEATURE_CMDLINE=m"
@@ -1138,8 +1137,8 @@ jobs:
             set_config "CONFIG_RUST=y"
             set_config "CONFIG_ANDROID_BINDER_IPC_RUST=m"
           fi
-
-      # Custom kernel build time, without adding #1 SMP PREEMPT 自定义内核构建时间，不要加入#1 SMP PREEMPT
+          
+          # Custom kernel build time, without adding #1 SMP PREEMPT
       - name: Custom BUILD_TIME
         if: ${{ github.event.inputs.BUILD_TIME != '-1' }}
         shell: bash
@@ -1177,67 +1176,67 @@ jobs:
         id: fast_build
         run: |
           cd kernel_workspace/kernel_platform
-
-          # 自动检测 LLVM_IAS
+          
+          # Auto detect LLVM_IAS
           if [[ -f ./common/build.config.arm ]] && grep -q '^LLVM_IAS=1' ./common/build.config.arm; then
             USE_LLVM_IAS=true
           else
             USE_LLVM_IAS=false
           fi
-
-          # 强制递推路径
+          
+          # Force recursive path
           CLANG_PREBUILT_NAME=$(find "$GITHUB_WORKSPACE/kernel_workspace/kernel_platform" -maxdepth 1 -type d -name 'prebuilts*' -exec test -d '{}/clang/host/linux-x86' \; -print | head -1)
           CLANG_PREBUILT_NAME=$(basename "${CLANG_PREBUILT_NAME:-}")
           echo "✅ CLANG_PREBUILT_NAME=$CLANG_PREBUILT_NAME"
-
+          
           KERNEL_BUILD_TOOLS_PREBUILT_NAME=$(find "$GITHUB_WORKSPACE/kernel_workspace/kernel_platform" -maxdepth 1 -type d -name 'prebuilts*' -exec test -d '{}/kernel-build-tools' \; -print | head -1)
           KERNEL_BUILD_TOOLS_PREBUILT_NAME=$(basename "${KERNEL_BUILD_TOOLS_PREBUILT_NAME:-}")
           echo "✅ KERNEL_BUILD_TOOLS_PREBUILT_NAME=$KERNEL_BUILD_TOOLS_PREBUILT_NAME"
-
+          
           if [[ "$ENABLE_RUST" == "true" ]]; then
             RUST_TOOLS_PREBUILT_NAME=$(find "$GITHUB_WORKSPACE/kernel_workspace/kernel_platform" -maxdepth 1 -type d -name 'prebuilts*' -exec test -d '{}/rust' \; -print | head -1)
             RUST_TOOLS_PREBUILT_NAME=$(basename "${RUST_TOOLS_PREBUILT_NAME:-}")
             echo "✅ RUST_TOOLS_PREBUILT_NAME=$RUST_TOOLS_PREBUILT_NAME"
           fi
-
-          # 从 build.config.common 读取 CLANG_PREBUILT_BIN，或者用递推路径 fallback
+          
+          # Read CLANG_PREBUILT_BIN from build.config.common, or use recursive path fallback
           CLANG_PREBUILT_BIN=""
           if [[ -f ./common/build.config.common ]]; then
             CLANG_PREBUILT_BIN=$(grep '^CLANG_PREBUILT_BIN=' ./common/build.config.common | cut -d'=' -f2-)
           fi
-
+          
           if [[ -z "$CLANG_PREBUILT_BIN" ]]; then
             CLANG_PREBUILT_BIN="${CLANG_PREBUILT_NAME}/clang/host/linux-x86/clang-zakozako/bin"
           fi
-
-          # 优先尝试从 CLANG_PREBUILT_BIN 识别出 clang-r，再去掉 clang-，作为 CLANG_VERSION
+          
+          # First try to identify clang-r from CLANG_PREBUILT_BIN, then remove clang-, as CLANG_VERSION
           if [[ "$CLANG_PREBUILT_BIN" =~ clang-(r[0-9a-z]+) ]]; then
             CLANG_VERSION="${BASH_REMATCH[1]}"
           else
-            # 如果未匹配到，尝试从 build.config.constants 提取
+            # If not matched, try to extract from build.config.constants
             if [[ -f ./common/build.config.constants ]]; then
               CLANG_VERSION=$(grep '^CLANG_VERSION=' ./common/build.config.constants | cut -d'=' -f2 || true)
             fi
           fi
-
+          
           if [[ -z "$CLANG_VERSION" ]]; then
-            echo "⚠️ 未能从 CLANG_PREBUILT_BIN 或 build.config.constants 获取到 Clang 版本，回退至官方构建脚本"
+            echo "⚠️ Could not get Clang version from CLANG_PREBUILT_BIN or build.config.constants, falling back to official build script"
             echo "fallback=true" >> "$GITHUB_OUTPUT"
-            echo "请考虑关闭 FAST_BUILD 并提交问题"
+            echo "Please consider turning off FAST_BUILD and submitting an issue"
             exit 0
           fi
-
+          
           CLANG_PREBUILT_BIN="${CLANG_PREBUILT_BIN/\$\{CLANG_VERSION\}/$CLANG_VERSION}"
           CLANG_PREBUILT_BIN="${CLANG_PREBUILT_BIN/clang-zakozako/clang-${CLANG_VERSION}}"
-
+          
           echo "✅ CLANG_PREBUILT_BIN=$CLANG_PREBUILT_BIN"
           echo "✅ CLANG_VERSION=$CLANG_VERSION"
           echo "✅ USE_LLVM_IAS=$USE_LLVM_IAS"
-
+          
           set +u
           source "$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/build/kernel/_setup_env.sh" 2>/dev/null || true
           set -u
-
+          
           export PATH="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/$CLANG_PREBUILT_BIN:$PATH"
           CLANG_LIB_PATH="${CLANG_PREBUILT_BIN%/bin}"
           if [[ -d "$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/$CLANG_LIB_PATH/lib" ]]; then
@@ -1245,20 +1244,20 @@ jobs:
           elif [[ -d "$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/clang-${CLANG_VERSION}/lib" ]]; then
             export LIBCLANG_PATH="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/clang-${CLANG_VERSION}/lib"
           else
-            export LIBCLANG_PATH="$(clang --print-resource-dir 2>/dev/null | sed 's|/lib/clang/.*||')/lib" 
+            export LIBCLANG_PATH="$(clang --print-resource-dir 2>/dev/null | sed 's|/lib/clang/.*||')/lib"
             echo "⚠️ LIBCLANG_PATH fallback to system: $LIBCLANG_PATH"
           fi
           echo "✅ LIBCLANG_PATH=$LIBCLANG_PATH"
           export PATH="/usr/lib/ccache:$PATH"
-
-          # BINDGEN 检测与 fallback
+          
+          # BINDGEN detection and fallback
           if [[ "$ENABLE_RUST" == "true" ]]; then
             BINDGEN_BIN="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/$CLANG_PREBUILT_NAME/clang-tools/linux-x86/bin/bindgen"
             if [ -x "$BINDGEN_BIN" ]; then
               export BINDGEN="$BINDGEN_BIN"
               echo "✅ bindgen exists: $BINDGEN_BIN"
             else
-              echo "⚠️ prebuilts bindgen 未找到，fallback 到 cargo 安装 bindgen 0.69.5"
+              echo "️ prebuilts bindgen not found, fallback to cargo install bindgen 0.69.5"
               echo "::group::Install bindgen via cargo"
               curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain none
               source "$HOME/.cargo/env"
@@ -1269,8 +1268,8 @@ jobs:
               echo "✅ BINDGEN_BIN (cargo): $BINDGEN_BIN"
             fi
           fi
-
-          # PAHOLE 检测与 fallback
+          
+          # PAHOLE detection and fallback
           PAHOLE_BIN="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/$KERNEL_BUILD_TOOLS_PREBUILT_NAME/kernel-build-tools/linux-x86/bin/pahole"
           if [ ! -x "$PAHOLE_BIN" ]; then
             PAHOLE_BIN="$(which pahole 2>/dev/null)"
@@ -1279,11 +1278,11 @@ jobs:
           if [ -x "$PAHOLE_BIN" ]; then
             echo "✅ pahole exists: $PAHOLE_BIN"
           else
-            echo "❌ pahole 完全缺失，终止构建"
+            echo "❌ pahole completely missing, terminating build"
             exit 13
           fi
-
-          # RUSTC 检测与 fallback
+          
+          # RUSTC detection and fallback
           if [[ "$ENABLE_RUST" == "true" ]]; then
             RUSTC_BIN="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/$RUST_TOOLS_PREBUILT_NAME/rust/linux-x86/$RUSTC_DIR_VERSION/bin/rustc"
             if [ ! -x "$RUSTC_BIN" ]; then
@@ -1294,11 +1293,11 @@ jobs:
               echo "✅ rustc exists: $RUSTC_BIN"
               export RUSTC="$RUSTC_BIN"
             else
-              echo "❌ rustc 完全缺失且 ENABLE_RUST=true，终止构建"
+              echo "❌ rustc completely missing and ENABLE_RUST=true, terminating build"
               exit 13
             fi
           fi
-
+          
           LD_WRAPPER=""
           if [ "${{ github.event.inputs.BUILD_NOCACHE }}" = "false" ] && [[ "$KERNEL_VERSION" == 5.* ]]; then
             LDCACHE_DIR="${GITHUB_WORKSPACE}/kernel_workspace/.thinlto-cache"
@@ -1306,33 +1305,33 @@ jobs:
             LD_WRAPPER="${GITHUB_WORKSPACE}/kernel_workspace/ld-wrapper"
             LLD_BIN="$(command -v ld.lld)"
             if [[ -z "$LLD_BIN" ]]; then
-              echo "⚠️ ld.lld 未找到，无法创建 ld-wrapper"
+              echo "⚠️ ld.lld not found, cannot create ld-wrapper"
             fi
             printf '#!/bin/bash\nexec "%s" "$@" --thinlto-cache-dir="%s" --thinlto-cache-policy=cache_size_bytes=3g --thinlto-jobs=%s\n' "$LLD_BIN" "$LDCACHE_DIR" "$(nproc --all)" > "$LD_WRAPPER"
             chmod +x "$LD_WRAPPER"
-            echo "✅ ld-wrapper 已创建: $LD_WRAPPER (lld=$LLD_BIN, cache=$LDCACHE_DIR)"
+            echo "✅ ld-wrapper created: $LD_WRAPPER (lld=$LLD_BIN, cache=$LDCACHE_DIR)"
           fi
-
+          
           REAL_CLANG_BIN="$GITHUB_WORKSPACE/kernel_workspace/kernel_platform/$CLANG_PREBUILT_BIN/clang"
           CC_WRAPPER="$GITHUB_WORKSPACE/kernel_workspace/cc-wrapper"
           printf '#!/bin/bash\nexec ccache "%s" "$@"\n' "$REAL_CLANG_BIN" > "$CC_WRAPPER"
           chmod +x "$CC_WRAPPER"
-          echo "✅ cc-wrapper 已创建: $CC_WRAPPER (clang=$REAL_CLANG_BIN)"
-
+          echo "✅ cc-wrapper created: $CC_WRAPPER (clang=$REAL_CLANG_BIN)"
+          
           cd ./common
-
-          # 重映射物理路径
+          
+          # Remap physical paths
           COMMON_REAL_PATH=$(pwd -P)
           PLATFORM_REAL_PATH=$(dirname "$COMMON_REAL_PATH")
           ROOT_REAL_PATH=$(dirname "$PLATFORM_REAL_PATH")
           MAP="-fdebug-prefix-map=$ROOT_REAL_PATH=."
           MPMAP="-fmacro-prefix-map=$ROOT_REAL_PATH=."
           FPMAP="-ffile-prefix-map=$ROOT_REAL_PATH=."
-
+          
           # KCFLAGS
           KCFLAGS="$MAP $FPMAP -no-canonical-prefixes -O2 -pipe -Wno-error -fno-stack-protector -D__ANDROID_COMMON_KERNEL__"
           KCPPFLAGS="$MPMAP"
-
+          
           MAKE_ARGS=(
             LLVM=1
             ARCH=arm64
@@ -1344,14 +1343,14 @@ jobs:
             KCFLAGS="$KCFLAGS"
             KCPPFLAGS="$KCPPFLAGS"
           )
-
+          
           if [[ -n "${CONFIG_FAKE_DISABLE:-}" ]]; then
             MAKE_ARGS+=(CONFIG_FAKE_DISABLE="$CONFIG_FAKE_DISABLE")
           fi
           if [[ -n "$LD_WRAPPER" ]]; then
             MAKE_ARGS+=(LD="$LD_WRAPPER")
           else
-            MAKE_ARGS+=(LD=ld.lld)     
+            MAKE_ARGS+=(LD=ld.lld)
           fi
           if [[ "$USE_LLVM_IAS" == "true" ]]; then
             MAKE_ARGS+=(LLVM_IAS=1)
@@ -1360,17 +1359,17 @@ jobs:
             MAKE_ARGS+=(RUSTC="$RUSTC_BIN")
             MAKE_ARGS+=(BINDGEN="$BINDGEN_BIN")
           fi
-
+          
           make O=out "${MAKE_ARGS[@]}" gki_defconfig --no-print-directory
-
+          
           if [[ "$KERNEL_VERSION" == 5.* ]]; then
-            echo "# 设置 LTO = thin"
+            echo "# Set LTO = thin"
             scripts/config --file out/.config -e LTO_CLANG
             scripts/config --file out/.config -e LTO_CLANG_THIN
             scripts/config --file out/.config -d LTO_CLANG_NONE
             scripts/config --file out/.config -d LTO_CLANG_FULL
           fi
-
+          
           make O=out "${MAKE_ARGS[@]}" olddefconfig --no-print-directory
           make -j"$(nproc --all)" O=out "${MAKE_ARGS[@]}"
           ccache -s
@@ -1396,17 +1395,17 @@ jobs:
           if [ -d "./kernel_workspace/kernel_platform/common/out/" ]; then
             image_path=$(find "./kernel_workspace/kernel_platform/common/out/" -name "Image" | head -n 1)
             if [ -n "$image_path" ]; then
-              echo "✅ 使用 make 编译的统一路径，成功找到 Image 文件"
+              echo "✅ Using unified path compiled by make, successfully found Image file"
             fi
           fi
           if [ -z "$image_path" ] && [ -d "./kernel_workspace/kernel_platform/out/" ]; then
             image_path=$(find "./kernel_workspace/kernel_platform/out/" -name "Image" | head -n 1)
             if [ -n "$image_path" ]; then
-              echo "✅ 使用官方脚本编译，成功找到 Image 文件"
+              echo "✅ Using official script compilation, successfully found Image file"
             fi
           fi
           if [ -z "$image_path" ]; then
-            echo "❌ 未找到 Image 文件，构建失败" >&2
+            echo "❌ Image file not found, build failed" >&2
             exit 1
           fi
           if [ -f "$image_path" ]; then
@@ -1468,18 +1467,18 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           MANAGER_ARTIFACT=Manager-release
-
+          
           echo "Using branch: $KSU_MANAGER_BRANCH"
           echo "Downloading artifact: $MANAGER_ARTIFACT"
-
+          
           run_id=$(gh api "repos/ReSukiSU/ReSukiSU/actions/workflows/build-manager.yml/runs?branch=$KSU_MANAGER_BRANCH&status=success&event=push&per_page=1" --jq '.workflow_runs[0].id' || echo "")
-
+          
           if [[ -z "$run_id" ]]; then
             echo "No successful workflow run found on branch $KSU_MANAGER_BRANCH. Skipping download."
             exit 0
           fi
           artifact_url=$(gh api "repos/ReSukiSU/ReSukiSU/actions/runs/$run_id/artifacts" | jq -r ".artifacts[] | select(.name == \"$MANAGER_ARTIFACT\") | .archive_download_url" | head -n1)
-
+          
           if [[ -z "$artifact_url" ]]; then
             echo "No artifact '$MANAGER_ARTIFACT' found in run $run_id. Skipping download."
             exit 0
@@ -1511,30 +1510,30 @@ jobs:
         run: |
           set -e
           ZRAM_ZIP="${GITHUB_WORKSPACE}/kernel_workspace/Action-Build/ZRAM.zip"
-
+          
           if [ ! -f "$ZRAM_ZIP" ]; then
-            echo "❌ 未找到 ZRAM.zip: $ZRAM_ZIP"
+            echo "❌ ZRAM.zip not found: $ZRAM_ZIP"
             echo "upload=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-
+          
           unzip "$ZRAM_ZIP" -d ZRAM-Module
-
+          
           CONFIG_PROP="ZRAM-Module/config.prop"
           if [ -f "$CONFIG_PROP" ]; then
-            echo "修改 config.prop"
+            echo "Modifying config.prop"
             sed -i "s/^ZRAM_ALGO=.*/ZRAM_ALGO=${ZRAM_ALGO}/" "$CONFIG_PROP"
             sed -i "s/^ZRAM_SIZE=.*/ZRAM_SIZE=${ZRAM_SIZE}/" "$CONFIG_PROP"
             echo "ZRAM_ALGO=${ZRAM_ALGO}"
             echo "ZRAM_SIZE=${ZRAM_SIZE}"
           else
-            echo "❌ 未找到 config.prop"
+            echo "❌ config.prop not found"
             echo "upload=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-
+          
           target="./ZRAM-Module/zram/zram.ko"
-          echo "查找 zram.ko 模块文件..."
+          echo "Searching for zram.ko module file..."
           search_paths=(
             "./kernel_workspace/kernel_platform/out"
             "./kernel_workspace/device/qcom"
@@ -1553,7 +1552,7 @@ jobs:
             echo "✅ zram.ko file finally located at: $zram_path"
             install -D "$zram_path" "$target"
           else
-            echo "❌ 未找到 zram.ko 文件，可能是未支持的内核版本或构建失败"
+            echo "❌ zram.ko file not found, it may be an unsupported kernel version or build failure"
             echo "upload=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -1577,11 +1576,11 @@ jobs:
               return
             fi
             SIZE_MB=$(du -sm "$CACHE_DIR" | cut -f1)
-            echo "$CACHE_DIR 大小: ${SIZE_MB}MB"
+            echo "$CACHE_DIR size: ${SIZE_MB}MB"
             if (( SIZE_MB >= 5 )); then
               echo "${CACHE_NAME}_save=true" >> "$GITHUB_OUTPUT"
             else
-              echo "::warning title=Cache Warning::$CACHE_NAME 小于 5MB，跳过保存"
+              echo "::warning title=Cache Warning::$CACHE_NAME is less than 5MB, skipping save"
               echo "${CACHE_NAME}_save=false" >> "$GITHUB_OUTPUT"
             fi
           }

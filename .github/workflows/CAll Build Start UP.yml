@@ -4,18 +4,18 @@ on:
   workflow_dispatch:
     inputs:
       BATCH:
-        description: "9个一组分批并行-选择分支(1-4)"
+        description: "Batch parallel processing in groups of 9 - Select batch (1-4)"
         required: true
         default: "1"
       CONFIRMATION:
-        description: "我已看完README.md,了解此工作流的风险和作用,有能力取消卡住的工作流运行和删除缓存,并执意继续运行"
+        description: "I have read the README.md, understand the risks and functions of this workflow, have the ability to cancel stuck workflow runs and delete caches, and insist on continuing."
         required: true
-        default: "请输入完整标题"
-
+        default: "I have read the README.md, understand the risks and functions of this workflow, have the ability to cancel stuck workflow runs and delete caches, and insist on continuing."
+        
 permissions:
   actions: read
   contents: read
-
+  
 jobs:
   generate-matrix:
     runs-on: ubuntu-latest
@@ -25,18 +25,18 @@ jobs:
       - name: Check User Confirmation
         run: |
           CONFIRM="${{ github.event.inputs.CONFIRMATION }}"
-          EXPECT="我已看完README.md,了解此工作流的风险和作用,有能力取消卡住的工作流运行和删除缓存,并执意继续运行"
-
+          EXPECT="I have read the README.md, understand the risks and functions of this workflow, have the ability to cancel stuck workflow runs and delete caches, and insist on continuing."
+          
           if [[ "$CONFIRM" != "$EXPECT" ]]; then
-            echo "❌ 输入无效，您未正确确认工作流风险。请阅读更新日志并正确输入确认内容。如果你仅仅只是想运行单个机型，这不是你该来的地方，请使用本仓库的另外一个工作流文件 Build All OnePlus Kernels"
+            echo "❌ Invalid input, you have not correctly confirmed the workflow risks. Please read the changelog and enter the confirmation content correctly. If you only want to run a single device model, this is not the right place, please use the other workflow file in this repository: Build All OnePlus Kernels"
             exit 1
           fi
-
+          
       - name: Set Matrix from FILE List
         id: set-matrix
         run: |
           BATCH="${{ github.event.inputs.BATCH }}"
-
+          
           if [[ "$BATCH" == "1" ]]; then
             FILE_LIST=(
               "oneplus_nord_ce4_lite_5g_v"
@@ -85,10 +85,10 @@ jobs:
               "oneplus_15"
             )
           else
-            echo "无效的 BATCH 值: $BATCH"
+            echo "Invalid BATCH value: $BATCH"
             exit 1
           fi
-
+          
           MATRIX_JSON=$(printf '%s\n' "${FILE_LIST[@]}" | jq -R -s -c '
             split("\n")[:-1] |
             map({
@@ -106,7 +106,7 @@ jobs:
             })
           ')
           echo "matrix=$MATRIX_JSON" >> $GITHUB_OUTPUT
-
+          
   build:
     needs: generate-matrix
     runs-on: ubuntu-latest
@@ -122,50 +122,50 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           inputs: |
             {
-              "FILE": "${{ matrix.file }}",
-              "SUSFS_CI": "NoN",
-              "KSU_META": "susfs-main/Numbersf/",
-              "BUILD_TIME": "F",
-              "SUFFIX": "",
-              "FAST_BUILD": "true",
-              "HOOK": "manual",
-              "LSM": "true",
-              "SCHED": "${{ matrix.enable_sched }}",
-              "ZRAM": "false"
+             "FILE":  "${{ matrix.file }}",
+             "SUSFS_CI":  "NoN",
+             "KSU_META":  "susfs-main/Numbersf/",
+             "BUILD_TIME":  "F",
+             "SUFFIX":  "",
+             "FAST_BUILD":  "true",
+             "HOOK":  "manual",
+             "LSM":  "true",
+             "SCHED":  "${{ matrix.enable_sched }}",
+             "ZRAM":  "false"
             }
-
+            
       - name: Wait for Builds to Finish or Exit Early
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           FILE="${{ matrix.file_short }}"
-          echo "等待目标构建 $FILE 上传对应 Artifact..."
-
+          echo "Waiting for target build $FILE to upload corresponding Artifact..."
+          
           SECONDS=0
           MAX_TIME=$((35 * 60))
           sleep 600
-
+          
           while (( SECONDS < MAX_TIME )); do
-            echo "查询已上传的 Artifact（已等待 $SECONDS 秒）..."
+            echo "Querying uploaded Artifacts (Waited $SECONDS seconds)..."
             ALL_ARTIFACTS=$(gh api --paginate repos/${{ github.repository }}/actions/artifacts --jq '.artifacts[].name')
-
+            
             if echo "$ALL_ARTIFACTS" | grep -E -q "$FILE"; then
-              echo "✅ 找到匹配的 Artifact：$(echo "$ALL_ARTIFACTS" | grep -E "$FILE" | head -n1)"
+              echo "✅ Found matching Artifact: $(echo "$ALL_ARTIFACTS" | grep -E "$FILE" | head -n1)"
               exit 0
             fi
-
-            echo "未找到匹配的 Artifact，休眠5min继续..."
+            
+            echo "No matching Artifact found, sleeping 5min and continuing..."
             sleep 300
           done
-
-          echo "❌ 超时未检测到 $FILE 的构建成功 Artifact。"
+          
+          echo "❌ Timed out waiting for successful build Artifact of $FILE."
           exit 1
-
+          
       - name: Clean ccache After Build
         run: |
           echo "Cleaning ccache for $HOME/.ccache_${{ matrix.file }} ..."
           rm -rf "$HOME/.ccache_${{ matrix.file }}"
-
+          
   wait-and-download:
     needs: build
     runs-on: ubuntu-latest
@@ -177,15 +177,15 @@ jobs:
         run: |
           sudo apt update && sudo apt install -y gh zip curl jq
           echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
-
+          
       - name: List Matching Artifacts for Current Batch
         id: list-artifacts
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "查找当前 Batch 的 Artifacts..."
+          echo "Searching for Artifacts of current Batch..."
           mkdir -p all_artifacts
-
+          
           BATCH="${{ github.event.inputs.BATCH }}"
           if [[ "$BATCH" == "1" ]]; then
             FILE_LIST=(
@@ -235,18 +235,18 @@ jobs:
               "oneplus_15"
             )
           else
-            echo "无效的 BATCH 值: $BATCH"
+            echo "Invalid BATCH value: $BATCH"
             exit 1
           fi
-
+          
           SHORT_LIST=()
           for FILE in "${FILE_LIST[@]}"; do
             SHORT=$(echo "$FILE" | sed -E 's/_[a-z]$//' | sed -E 's/_v$//')
             SHORT_LIST+=("$SHORT")
           done
-
+          
           ALL_ARTIFACTS=$(gh api --paginate repos/${{ github.repository }}/actions/artifacts --jq '.artifacts[].name')
-
+          
           MATCHED_ARTIFACTS=()
           for FILE in "${SHORT_LIST[@]}"; do
             for ART in $ALL_ARTIFACTS; do
@@ -255,15 +255,15 @@ jobs:
               fi
             done
           done
-
+          
           if [[ "${#MATCHED_ARTIFACTS[@]}" -eq 0 ]]; then
-            echo "没有匹配的 Artifact，终止"
+            echo "No matching Artifacts, terminating"
             exit 1
           fi
-
+          
           ARTIFACT_NAMES=$(IFS=";"; echo "${MATCHED_ARTIFACTS[*]}")
           echo "ARTIFACT_NAMES=$ARTIFACT_NAMES" >> "$GITHUB_OUTPUT"
-
+          
       - name: Download All Matched Artifacts as ZIP
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -271,25 +271,25 @@ jobs:
           mkdir -p all_artifacts
           IFS=';' read -ra NAMES <<< "${{ steps.list-artifacts.outputs.ARTIFACT_NAMES }}"
           for NAME in "${NAMES[@]}"; do
-            echo "查找 artifact $NAME 的 ID..."
+            echo "Searching for ID of artifact $NAME..."
             ARTIFACT_ID=$(gh api repos/${{ github.repository }}/actions/artifacts --jq ".artifacts[] | select(.name==\"$NAME\") | .id")
             if [[ -n "$ARTIFACT_ID" ]]; then
-              echo "下载 $NAME (ID: $ARTIFACT_ID)..."
+              echo "Downloading $NAME (ID: $ARTIFACT_ID)..."
               curl -L -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
                    -o "all_artifacts/${NAME}.zip" \
                    "https://api.github.com/repos/${{ github.repository }}/actions/artifacts/${ARTIFACT_ID}/zip"
             else
-              echo "未找到 $NAME 的 ID，跳过"
+              echo "ID for $NAME not found, skipping"
             fi
           done
-
+          
       - name: Create Final ZIP from Extracted ZIPS
         run: |
           cd all_artifacts
-          zip -r ../All-AnyKernel3-ReSukiSU-${{ github.event.inputs.BATCH }}.zip ./*
-
+          zip -r ../All-AnyKernel3-SukiSUUltra-${{ github.event.inputs.BATCH }}.zip ./*
+          
       - name: Upload Combined ZIP Artifact
         uses: actions/upload-artifact@v7
         with:
-          name: All-AnyKernel3-ReSukiSU-${{ github.event.inputs.BATCH }}
-          path: All-AnyKernel3-ReSukiSU-${{ github.event.inputs.BATCH }}.zip
+          name: All-AnyKernel3-SukiSUUltra-${{ github.event.inputs.BATCH }}
+          path: All-AnyKernel3-SukiSUUltra-${{ github.event.inputs.BATCH }}.zip
