@@ -127,7 +127,7 @@ on:
         type: string
         description: "Custom kernel suffix (Leave blank to use RAND_STR, or -1 to disable)"
         required: false
-        default: ""
+        default: "5-g16e473de48a3-abogki462654244-4k"
       RESUBLEVEL:
         description: "Custom kernel SUBLEVEL spoofing"
         required: false
