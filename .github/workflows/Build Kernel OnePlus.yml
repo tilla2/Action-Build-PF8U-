@@ -199,9 +199,7 @@ jobs:
       CCACHE_IS_KERNEL_COMPILING: "true"
       CCACHE_MAXSIZE: 5G
     steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
+    
       - name: Maximize Build Space
         if: ${{ github.event.inputs.SPACE_NOCLEAN == 'false' }}
         uses: easimon/maximize-build-space@master
@@ -213,13 +211,18 @@ jobs:
           remove-haskell: 'true'
           remove-codeql: 'true'
 
+      - name: Checkout
+        uses: actions/checkout@v7
+
       - name: Configure Git
         run: |
           git config --global user.name "Numbersf"
           git config --global user.email "263623064@qq.com"
           mkdir kernel_workspace && cd kernel_workspace
           git clone https://github.com/Numbersf/Action-Build.git -b ReSukiSU
+          [ -d "$GITHUB_WORKSPACE/patches" ] || { echo "::error::patches/ missing from checkout"; exit 1; }
           cp -r "$GITHUB_WORKSPACE/patches/." Action-Build/patches/
+          ls -la Action-Build/patches/bbrv3/
 
       - name: Extract Manifest Info
         id: extract_info
