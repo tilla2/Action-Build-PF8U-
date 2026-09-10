@@ -796,7 +796,7 @@ jobs:
           check_rejects .
 
       - name: Apply BBRv3
-        if: ${{ github.event.inputs.CCM == 'true' && env.KMI != 'android16-6.12' }}
+        if: ${{ github.event.inputs.CCM == 'true' }}
         run: |
           PATCH_DIR="${GITHUB_WORKSPACE}/kernel_workspace/Action-Build/patches"
           cd kernel_workspace/kernel_platform/common
@@ -1051,9 +1051,7 @@ jobs:
           if [ "${{ github.event.inputs.CCM }}" = "true" ]; then
             set_hide_config "CONFIG_TCP_CONG_ADVANCED=y"
             set_config "CONFIG_TCP_CONG_BBR=y"
-            if [ "$KMI" != "android16-6.12" ]; then
-              set_config "CONFIG_TCP_CONG_BBR3=y"
-            fi
+            set_config "CONFIG_TCP_CONG_BBR3=y"
             set_config "CONFIG_NET_SCH_FQ=y"
             set_config "CONFIG_TCP_CONG_BIC=n"
             set_config "CONFIG_TCP_CONG_WESTWOOD=n"
